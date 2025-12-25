@@ -114,6 +114,7 @@ export const OneTimeCodeScalarFieldEnum = {
   email: 'email',
   code: 'code',
   used: 'used',
+  expiry: 'expiry',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

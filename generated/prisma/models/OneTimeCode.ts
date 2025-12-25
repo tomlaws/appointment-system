@@ -29,6 +29,7 @@ export type OneTimeCodeMinAggregateOutputType = {
   email: string | null
   code: string | null
   used: boolean | null
+  expiry: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -38,6 +39,7 @@ export type OneTimeCodeMaxAggregateOutputType = {
   email: string | null
   code: string | null
   used: boolean | null
+  expiry: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -47,6 +49,7 @@ export type OneTimeCodeCountAggregateOutputType = {
   email: number
   code: number
   used: number
+  expiry: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -58,6 +61,7 @@ export type OneTimeCodeMinAggregateInputType = {
   email?: true
   code?: true
   used?: true
+  expiry?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -67,6 +71,7 @@ export type OneTimeCodeMaxAggregateInputType = {
   email?: true
   code?: true
   used?: true
+  expiry?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -76,6 +81,7 @@ export type OneTimeCodeCountAggregateInputType = {
   email?: true
   code?: true
   used?: true
+  expiry?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -158,6 +164,7 @@ export type OneTimeCodeGroupByOutputType = {
   email: string
   code: string
   used: boolean
+  expiry: Date
   createdAt: Date
   updatedAt: Date
   _count: OneTimeCodeCountAggregateOutputType | null
@@ -188,6 +195,7 @@ export type OneTimeCodeWhereInput = {
   email?: Prisma.StringFilter<"OneTimeCode"> | string
   code?: Prisma.StringFilter<"OneTimeCode"> | string
   used?: Prisma.BoolFilter<"OneTimeCode"> | boolean
+  expiry?: Prisma.DateTimeFilter<"OneTimeCode"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"OneTimeCode"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"OneTimeCode"> | Date | string
 }
@@ -197,6 +205,7 @@ export type OneTimeCodeOrderByWithRelationInput = {
   email?: Prisma.SortOrder
   code?: Prisma.SortOrder
   used?: Prisma.SortOrder
+  expiry?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -209,6 +218,7 @@ export type OneTimeCodeWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.OneTimeCodeWhereInput | Prisma.OneTimeCodeWhereInput[]
   email?: Prisma.StringFilter<"OneTimeCode"> | string
   used?: Prisma.BoolFilter<"OneTimeCode"> | boolean
+  expiry?: Prisma.DateTimeFilter<"OneTimeCode"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"OneTimeCode"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"OneTimeCode"> | Date | string
 }, "id" | "code">
@@ -218,6 +228,7 @@ export type OneTimeCodeOrderByWithAggregationInput = {
   email?: Prisma.SortOrder
   code?: Prisma.SortOrder
   used?: Prisma.SortOrder
+  expiry?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.OneTimeCodeCountOrderByAggregateInput
@@ -233,6 +244,7 @@ export type OneTimeCodeScalarWhereWithAggregatesInput = {
   email?: Prisma.StringWithAggregatesFilter<"OneTimeCode"> | string
   code?: Prisma.StringWithAggregatesFilter<"OneTimeCode"> | string
   used?: Prisma.BoolWithAggregatesFilter<"OneTimeCode"> | boolean
+  expiry?: Prisma.DateTimeWithAggregatesFilter<"OneTimeCode"> | Date | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"OneTimeCode"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"OneTimeCode"> | Date | string
 }
@@ -242,6 +254,7 @@ export type OneTimeCodeCreateInput = {
   email: string
   code: string
   used?: boolean
+  expiry: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -251,6 +264,7 @@ export type OneTimeCodeUncheckedCreateInput = {
   email: string
   code: string
   used?: boolean
+  expiry: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -260,6 +274,7 @@ export type OneTimeCodeUpdateInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   code?: Prisma.StringFieldUpdateOperationsInput | string
   used?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiry?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -269,6 +284,7 @@ export type OneTimeCodeUncheckedUpdateInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   code?: Prisma.StringFieldUpdateOperationsInput | string
   used?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiry?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -278,6 +294,7 @@ export type OneTimeCodeCreateManyInput = {
   email: string
   code: string
   used?: boolean
+  expiry: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -287,6 +304,7 @@ export type OneTimeCodeUpdateManyMutationInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   code?: Prisma.StringFieldUpdateOperationsInput | string
   used?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiry?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -296,6 +314,7 @@ export type OneTimeCodeUncheckedUpdateManyInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   code?: Prisma.StringFieldUpdateOperationsInput | string
   used?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiry?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -305,6 +324,7 @@ export type OneTimeCodeCountOrderByAggregateInput = {
   email?: Prisma.SortOrder
   code?: Prisma.SortOrder
   used?: Prisma.SortOrder
+  expiry?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -314,6 +334,7 @@ export type OneTimeCodeMaxOrderByAggregateInput = {
   email?: Prisma.SortOrder
   code?: Prisma.SortOrder
   used?: Prisma.SortOrder
+  expiry?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -323,6 +344,7 @@ export type OneTimeCodeMinOrderByAggregateInput = {
   email?: Prisma.SortOrder
   code?: Prisma.SortOrder
   used?: Prisma.SortOrder
+  expiry?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -338,6 +360,7 @@ export type OneTimeCodeSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   email?: boolean
   code?: boolean
   used?: boolean
+  expiry?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["oneTimeCode"]>
@@ -347,6 +370,7 @@ export type OneTimeCodeSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   email?: boolean
   code?: boolean
   used?: boolean
+  expiry?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["oneTimeCode"]>
@@ -356,6 +380,7 @@ export type OneTimeCodeSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   email?: boolean
   code?: boolean
   used?: boolean
+  expiry?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["oneTimeCode"]>
@@ -365,11 +390,12 @@ export type OneTimeCodeSelectScalar = {
   email?: boolean
   code?: boolean
   used?: boolean
+  expiry?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type OneTimeCodeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "code" | "used" | "createdAt" | "updatedAt", ExtArgs["result"]["oneTimeCode"]>
+export type OneTimeCodeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "code" | "used" | "expiry" | "createdAt" | "updatedAt", ExtArgs["result"]["oneTimeCode"]>
 
 export type $OneTimeCodePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "OneTimeCode"
@@ -379,6 +405,7 @@ export type $OneTimeCodePayload<ExtArgs extends runtime.Types.Extensions.Interna
     email: string
     code: string
     used: boolean
+    expiry: Date
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["oneTimeCode"]>
@@ -808,6 +835,7 @@ export interface OneTimeCodeFieldRefs {
   readonly email: Prisma.FieldRef<"OneTimeCode", 'String'>
   readonly code: Prisma.FieldRef<"OneTimeCode", 'String'>
   readonly used: Prisma.FieldRef<"OneTimeCode", 'Boolean'>
+  readonly expiry: Prisma.FieldRef<"OneTimeCode", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"OneTimeCode", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"OneTimeCode", 'DateTime'>
 }

@@ -2,6 +2,7 @@ import { UserStatus } from "../generated/prisma/enums";
 import { Config } from "./config";
 import { AppErrors } from "./error";
 import prisma from "./prisma";
+import { sendEmail } from "./resend";
 import type { Calendar } from "./types";
 
 export async function getCalendar(year: number, month: number): Promise<Calendar> {
@@ -105,23 +106,17 @@ async function validateSlotTime(time: Date) {
     return false;
 }
 
-export async function getUserByEmail(email: string, firstName?: string, lastName?: string) {
-    let user = await prisma.user.findUnique({
-        where: { email },
+export async function generateAndSendOneTimeCode(email: string) {
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
+    await prisma.oneTimeCode.create({
+        data: {
+            email,
+            code,
+            expiry
+        }
     });
-    if (!user) {
-        user = await prisma.user.create({
-            data: {
-                email,
-                firstName: firstName || null,
-                lastName: lastName || null,
-                status: UserStatus.ANONYMOUS
-            }
-        });
-        return user;
-    } else {
-        return user;
-    }
+    await sendEmail(email, 'Your One-Time Code', `Your one-time code is: ${code}`);
 }
 
 export async function getEmailByOneTimeCode(code: string) {
@@ -141,10 +136,41 @@ export async function getEmailByOneTimeCode(code: string) {
     return otc[0]?.email;
 }
 
+export async function getUserByEmail(email: string, firstName: string, lastName: string) {
+    let user = await prisma.user.findUnique({
+        where: { email },
+    });
+    if (!user) {
+        user = await prisma.user.create({
+            data: {
+                email,
+                firstName: firstName,
+                lastName: lastName,
+                status: UserStatus.ANONYMOUS
+            }
+        });
+        return user;
+    } else {
+        return user;
+    }
+}
+
 export async function createBooking(userId: string, time: Date) {
     const isValidTime = await validateSlotTime(time);
     if (!isValidTime) {
         throw new AppErrors.InvalidTimeSlotError();
+    }
+    // Check if user already has a booking at the same time
+    const existingBooking = await prisma.booking.findUnique({
+        where: {
+            userId_time: {
+                userId,
+                time
+            }
+        }
+    });
+    if (existingBooking) {
+        throw new AppErrors.AlreadyBookedError();
     }
     return prisma.$transaction(async (tx) => {
         const timeSlot = await tx.timeSlot.findUnique({

@@ -17,20 +17,27 @@ class InvalidTimeSlotError extends AppError {
     }
 }
 
-class TimeSlotFullError extends AppError {
+class InvalidOneTimeCodeError extends AppError {
     constructor() {
-        super('No opening for the selected time slot', 400, 1002);
+        super('The provided one-time code is invalid or has already been used', 400, 1002);
     }
 }
 
-class InvalidOneTimeCodeError extends AppError {
+class TimeSlotFullError extends AppError {
     constructor() {
-        super('The provided one-time code is invalid or has already been used', 400, 1003);
+        super('No opening for the selected time slot', 400, 1003);
+    }
+}
+
+class AlreadyBookedError extends AppError {
+    constructor() {
+        super('You have already booked this time slot', 400, 1004);
     }
 }
 
 export const AppErrors = {
     InvalidTimeSlotError,
-    TimeSlotFullError,
     InvalidOneTimeCodeError,
+    TimeSlotFullError,
+    AlreadyBookedError,
 };

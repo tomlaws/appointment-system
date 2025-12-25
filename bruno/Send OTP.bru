@@ -1,0 +1,22 @@
+meta {
+  name: Send OTP
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{HOST}}/api/otp/send
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "hwlaw1998@gmail.com"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

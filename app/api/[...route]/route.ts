@@ -3,7 +3,7 @@ import { handle } from 'hono/vercel'
 import { AppError } from '../../../lib/error';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator'
-import { getUserByEmail, createBooking, getCalendar, getEmailByOneTimeCode, getTimeSlotsForDate } from '../../../lib/app';
+import { getUserByEmail, createBooking, getCalendar, getEmailByOneTimeCode, getTimeSlotsForDate, generateAndSendOneTimeCode } from '../../../lib/app';
 import { optionalAuthMiddleware } from '../../../lib/auth';
 import jwt from 'jsonwebtoken';
 
@@ -49,7 +49,10 @@ app.post(
         email: z.email(),
     })),
     async (c) => {
-        // In a real application, you would send an email with the one-time code here.
+        // Generate and send one-time code to email
+        const email = c.req.valid('json').email;
+        await generateAndSendOneTimeCode(email);
+        return c.json({ message: 'OTP sent' });
     });
 
 app.post(
@@ -68,7 +71,7 @@ app.post(
     '/bookings',
     zValidator('json', z.object({
         time: z.coerce.date(),
-        user: z.object({
+        anonymous: z.object({
             token: z.string(),
             firstName: z.string(),
             lastName: z.string(),
@@ -77,18 +80,20 @@ app.post(
     optionalAuthMiddleware,
     async (c) => {
         const auth = c.get('auth');
-        const user = c.req.valid('json').user;
-        if (user) {
-            const token = c.req.valid('json').user?.token;
-            const email = token ? jwt.verify(token, process.env.JWT_SECRET!) as string : null;
+        const anonymous = c.req.valid('json').anonymous;
+        if (anonymous) {
+            const token = anonymous.token;
+            // Parse json
+            const payload = jwt.verify(token, process.env.JWT_SECRET!);
+            const email = (payload as any).email;
             if (!email) {
-                return c.json({ message: 'Invalid or expired token' }, 401);
+                return c.json({ message: 'Invalid anonymous token' }, 401);
             }
             // Create anonymous user if not exists, returns existing user if already exists
             const user = await getUserByEmail(
                 email,
-                c.req.valid('json').user?.firstName,
-                c.req.valid('json').user?.lastName
+                anonymous.firstName,
+                anonymous.lastName
             );
             const booking = await createBooking(user.id, c.req.valid('json').time);
             return c.json(booking, 201);
