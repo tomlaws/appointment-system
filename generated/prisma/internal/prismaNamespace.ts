@@ -386,7 +386,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   Booking: 'Booking',
-  TimeSlot: 'TimeSlot'
+  TimeSlot: 'TimeSlot',
+  OneTimeCode: 'OneTimeCode'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -402,7 +403,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "booking" | "timeSlot"
+    modelProps: "user" | "booking" | "timeSlot" | "oneTimeCode"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -628,6 +629,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    OneTimeCode: {
+      payload: Prisma.$OneTimeCodePayload<ExtArgs>
+      fields: Prisma.OneTimeCodeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OneTimeCodeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OneTimeCodePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OneTimeCodeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OneTimeCodePayload>
+        }
+        findFirst: {
+          args: Prisma.OneTimeCodeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OneTimeCodePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OneTimeCodeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OneTimeCodePayload>
+        }
+        findMany: {
+          args: Prisma.OneTimeCodeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OneTimeCodePayload>[]
+        }
+        create: {
+          args: Prisma.OneTimeCodeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OneTimeCodePayload>
+        }
+        createMany: {
+          args: Prisma.OneTimeCodeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OneTimeCodeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OneTimeCodePayload>[]
+        }
+        delete: {
+          args: Prisma.OneTimeCodeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OneTimeCodePayload>
+        }
+        update: {
+          args: Prisma.OneTimeCodeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OneTimeCodePayload>
+        }
+        deleteMany: {
+          args: Prisma.OneTimeCodeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OneTimeCodeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OneTimeCodeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OneTimeCodePayload>[]
+        }
+        upsert: {
+          args: Prisma.OneTimeCodeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OneTimeCodePayload>
+        }
+        aggregate: {
+          args: Prisma.OneTimeCodeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOneTimeCode>
+        }
+        groupBy: {
+          args: Prisma.OneTimeCodeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OneTimeCodeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OneTimeCodeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OneTimeCodeCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -669,6 +744,7 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 
 export const UserScalarFieldEnum = {
   id: 'id',
+  status: 'status',
   email: 'email',
   password: 'password',
   firstName: 'firstName',
@@ -702,6 +778,18 @@ export const TimeSlotScalarFieldEnum = {
 export type TimeSlotScalarFieldEnum = (typeof TimeSlotScalarFieldEnum)[keyof typeof TimeSlotScalarFieldEnum]
 
 
+export const OneTimeCodeScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  code: 'code',
+  used: 'used',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OneTimeCodeScalarFieldEnum = (typeof OneTimeCodeScalarFieldEnum)[keyof typeof OneTimeCodeScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -716,6 +804,14 @@ export const QueryMode = {
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
 
@@ -735,6 +831,20 @@ export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 
  * Reference to a field of type 'String[]'
  */
 export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
+    
+
+
+/**
+ * Reference to a field of type 'UserStatus'
+ */
+export type EnumUserStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'UserStatus[]'
+ */
+export type ListEnumUserStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserStatus[]'>
     
 
 
@@ -763,6 +873,13 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -877,6 +994,7 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   booking?: Prisma.BookingOmit
   timeSlot?: Prisma.TimeSlotOmit
+  oneTimeCode?: Prisma.OneTimeCodeOmit
 }
 
 /* Types for Logging */

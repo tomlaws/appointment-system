@@ -23,7 +23,14 @@ class TimeSlotFullError extends AppError {
     }
 }
 
+class InvalidOneTimeCodeError extends AppError {
+    constructor() {
+        super('The provided one-time code is invalid or has already been used', 400, 1003);
+    }
+}
+
 export const AppErrors = {
     InvalidTimeSlotError,
     TimeSlotFullError,
+    InvalidOneTimeCodeError,
 };

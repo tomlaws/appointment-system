@@ -32,3 +32,8 @@ export type Booking = Prisma.BookingModel
  * 
  */
 export type TimeSlot = Prisma.TimeSlotModel
+/**
+ * Model OneTimeCode
+ * 
+ */
+export type OneTimeCode = Prisma.OneTimeCodeModel

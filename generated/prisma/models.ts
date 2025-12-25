@@ -11,4 +11,5 @@
 export type * from './models/User.ts'
 export type * from './models/Booking.ts'
 export type * from './models/TimeSlot.ts'
+export type * from './models/OneTimeCode.ts'
 export type * from './commonInputTypes.ts'

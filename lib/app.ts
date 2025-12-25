@@ -1,3 +1,4 @@
+import { UserStatus } from "../generated/prisma/enums";
 import { Config } from "./config";
 import { AppErrors } from "./error";
 import prisma from "./prisma";
@@ -91,18 +92,53 @@ export async function getTimeSlotsForDate(year: number, month: number, day: numb
 async function validateSlotTime(time: Date) {
     const hour = time.getHours();
     const minute = time.getMinutes();
+    console.log(`Validating time slot: ${hour}:${minute}`);
     const officeHours = Config.officeHours;
     const slotDuration = Config.timeslotDurationMinutes;
     for (const { start, end } of officeHours) {
-        if (time >= start && time < end) {
-            const totalMinutes = hour * 60 + minute;
-            const startMinutes = start.getHours() * 60 + start.getMinutes();
-            if ((totalMinutes - startMinutes) % slotDuration === 0) {
+        for (let t = new Date(start); t < end; t = new Date(t.getTime() + slotDuration * 60 * 1000)) {
+            if (t.getHours() === hour && t.getMinutes() === minute) {
                 return true;
             }
         }
     }
     return false;
+}
+
+export async function getUserByEmail(email: string, firstName?: string, lastName?: string) {
+    let user = await prisma.user.findUnique({
+        where: { email },
+    });
+    if (!user) {
+        user = await prisma.user.create({
+            data: {
+                email,
+                firstName: firstName || null,
+                lastName: lastName || null,
+                status: UserStatus.ANONYMOUS
+            }
+        });
+        return user;
+    } else {
+        return user;
+    }
+}
+
+export async function getEmailByOneTimeCode(code: string) {
+    const otc = await prisma.oneTimeCode.updateManyAndReturn({
+        where: {
+            code,
+            used: false,
+            expiry: { gt: new Date() }
+        },
+        data: {
+            used: true
+        }
+    });
+    if (otc === null || otc.length === 0) {
+        throw new AppErrors.InvalidOneTimeCodeError();
+    }
+    return otc[0]?.email;
 }
 
 export async function createBooking(userId: string, time: Date) {
@@ -116,7 +152,7 @@ export async function createBooking(userId: string, time: Date) {
         });
         if (timeSlot === null) {
             // Create new timeslot
-            const newTimeSlot = await tx.timeSlot.create({
+            await tx.timeSlot.create({
                 data: {
                     time: time,
                     openings: Config.timeslotCapacity - 1,
