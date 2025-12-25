@@ -7,6 +7,9 @@
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
+  moduleFormat = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension = "ts"
 }
 
 datasource db {
@@ -22,10 +25,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  appointments Appointment[]
+  bookings Booking[]
 }
 
-model Appointment {
+model Booking {
   id        String   @id @default(uuid())
   user      User     @relation(fields: [userId], references: [id])
   userId    String
@@ -36,7 +39,7 @@ model Appointment {
 
 model TimeSlot {
   id        String   @id @default(uuid())
-  time      DateTime
+  time      DateTime @unique
   openings  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
