@@ -280,7 +280,9 @@ export default function AppointmentSystem() {
               <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-2 sm:p-6 w-full flex flex-col h-[540px]">
                 <div className="flex items-center justify-center h-[48px] mb-4">
                   <span className="text-blue-900 font-semibold text-base flex items-center h-full justify-center">
-                    {selectedDay !== null ? new Date(year, month - 1, selectedDay).toLocaleString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                    {selectedDay !== null
+                      ? `Timeslots available on ${new Date(year, month - 1, selectedDay).toLocaleString('en-US', { month: 'short', day: 'numeric' })}`
+                      : ''}
                   </span>
                 </div>
                 <div className="relative flex-1 min-h-0 overflow-y-auto">
