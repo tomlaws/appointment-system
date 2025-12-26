@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
-import Button from '../components/ui/Button';
-import LoadingIndicator from '../components/ui/LoadingIndicator';
-import type { TimeSlot } from '../generated/prisma/browser';
+import Button from '../../components/ui/Button';
+import LoadingIndicator from '../../components/ui/LoadingIndicator';
+import type { TimeSlot } from '../../generated/prisma/browser';
 import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
 import { VCenter } from '@/components/ui/VCenter';
 import { authClient } from '@/lib/auth-client';

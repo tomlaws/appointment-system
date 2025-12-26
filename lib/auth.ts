@@ -1,6 +1,6 @@
 
 import { betterAuth } from "better-auth";
-import { emailOTP, magicLink } from "better-auth/plugins"
+import { admin, emailOTP } from "better-auth/plugins"
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import prisma from './prisma';
 import { sendEmail } from "./resend";
@@ -9,8 +9,9 @@ import type { Hono, MiddlewareHandler } from "hono";
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: 'postgresql',
-    }), 
+    }),
     plugins: [
+        admin(),
         emailOTP({
             overrideDefaultEmailVerification: true,
             async sendVerificationOTP({ email, otp, type }) {

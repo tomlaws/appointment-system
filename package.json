@@ -10,6 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
+    "better-auth:generate": "npx @better-auth/cli generate",
     "lint": "eslint",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

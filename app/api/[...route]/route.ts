@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { createBooking, getCalendar, getTimeSlotsForDate, cancelBooking, getBookings } from '../../../lib/app';
 import { auth, authMiddleware, setupHonoAuth } from '../../../lib/auth';
+import { adminApp } from '@/lib/admin-app';
 
 const app = new Hono<{
     Variables: {
@@ -108,6 +109,27 @@ app.get(
         const [bookings, hasMore] = await getBookings(user.id, after, limit, past);
         c.res.headers.set('X-Limit', limit.toString());
         c.res.headers.set('X-Has-More', hasMore ? 'true' : 'false');
+        return c.json(bookings);
+    });
+
+// Admin routes
+app.use('/admin/*', authMiddleware);
+
+app.get('/admin/bookings',
+    zValidator('query', z.object({
+        username: z.string().optional(),
+        email: z.string().optional(),
+        limit: z.coerce.number().int().min(1).max(100).default(10),
+        offset: z.coerce.number().int().min(0).default(0),
+    })),
+    async (c) => {
+        const { bookings, total } = await adminApp.getBookings({
+            username: c.req.valid('query').username,
+            email: c.req.valid('query').email,
+            limit: c.req.valid('query').limit,
+            offset: c.req.valid('query').offset,
+        });
+        c.res.headers.set('X-Total-Count', total.toString());
         return c.json(bookings);
     });
 
