@@ -51,7 +51,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow p-8 w-full max-w-2xl mx-auto sm:w-[420px]">
+      <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-8 w-full max-w-2xl mx-auto sm:w-[420px]">
         <h2 className="text-2xl font-bold mb-6 text-center">Login / Signup</h2>
         {step === "email" && (
           <form onSubmit={handleSendOtp} className="space-y-4">

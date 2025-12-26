@@ -1,13 +1,15 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Button from '../components/ui/Button';
 import LoadingIndicator from '../components/ui/LoadingIndicator';
 import type { TimeSlot } from '../generated/prisma/browser';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
 import { VCenter } from '@/components/ui/VCenter';
+import { authClient } from '@/lib/auth-client';
+import { useRouter } from 'next/navigation';
 
-function fetchCalendar(year: number, month: number) {
-  return fetch(`/api/calendar?year=${year}&month=${month}`).then(res => res.json());
+function fetchCalendar(year: number, month: number, signal: AbortSignal) {
+  return fetch(`/api/calendar?year=${year}&month=${month}`, { signal }).then(res => res.json());
 }
 
 function fetchTimeSlots(year: number, month: number, day: number) {
@@ -27,9 +29,11 @@ function createBooking(time: Date) {
 
 export default function AppointmentSystem() {
   const today = new Date();
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
-  const [day, setDay] = useState(today.getDate());
   const [calendar, setCalendar] = useState<any | null>(null);
   const [slots, setSlots] = useState<(TimeSlot & { past: boolean })[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(true);
@@ -48,8 +52,42 @@ export default function AppointmentSystem() {
   const [calendarLoading, setCalendarLoading] = useState(false);
 
   useEffect(() => {
+    // Cancel previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+    
     setCalendarLoading(true);
-    fetchCalendar(year, month).then(setCalendar).finally(() => setCalendarLoading(false));
+    
+    fetchCalendar(year, month, signal)
+      .then((data) => {
+        // Only update if this response is for the current year/month
+        if (!signal.aborted) {
+          setCalendar(data);
+        }
+      })
+      .catch((error) => {
+        if (!signal.aborted) {
+          console.error('Failed to fetch calendar:', error);
+          setCalendar(null);
+        }
+      })
+      .finally(() => {
+        if (!signal.aborted) {
+          setCalendarLoading(false);
+        }
+      });
+      
+    // Cleanup function to abort on unmount or dependency change
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [year, month]);
 
 
@@ -70,6 +108,10 @@ export default function AppointmentSystem() {
 
   const handleBook = async () => {
     if (!selectedTime) return;
+    if (!session?.user) {
+      router.push('/login');
+      return;
+    }
     setBookingLoading(true);
     setBookingError(null);
     try {
@@ -116,15 +158,15 @@ export default function AppointmentSystem() {
 
   return (
     <VCenter>
-      <div className="max-w-[1200px] mx-auto p-5 overflow-x-hidden font-sans w-full">
-        <div className="flex flex-wrap gap-5 items-start w-full">
-          <div className="flex-1 min-w-[320px]">
-            <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-6 w-full flex flex-col h-[540px]">
+      <div className="max-w-[1200px] mx-auto p-2 sm:p-5 overflow-x-hidden font-sans w-full">
+        <div className="flex flex-col md:flex-row gap-5 items-start w-full">
+          <div className="flex-1 w-full">
+            <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-2 sm:p-6 w-full flex flex-col h-[540px]">
               <div className="flex items-center justify-between h-[48px] mb-4">
                 <div className="w-12 flex justify-start items-center h-full">
                   <button
                     aria-label="Previous month"
-                    disabled={month === today.getMonth() + 1 && year === today.getFullYear()}
+                    disabled={calendarLoading || (month === today.getMonth() + 1 && year === today.getFullYear())}
                     onClick={() => {
                       let newMonth, newYear;
                       if (month === 1) {
@@ -153,6 +195,7 @@ export default function AppointmentSystem() {
                 <div className="w-12 flex justify-end items-center h-full">
                   <button
                     aria-label="Next month"
+                    disabled={calendarLoading}
                     onClick={() => {
                       let newMonth, newYear;
                       if (month === 12) {
@@ -232,9 +275,9 @@ export default function AppointmentSystem() {
               </div>
             </div>
           </div>
-          <div className="flex-1 min-w-[300px] flex flex-col w-full md:flex-[0_0_360px] md:w-[360px]">
+          <div className="flex-1 flex flex-col w-full lg:flex-[0_0_360px] lg:w-[360px]">
             {selectedDay !== null && (
-              <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-6 w-full flex flex-col h-[540px]">
+              <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-2 sm:p-6 w-full flex flex-col h-[540px]">
                 <div className="flex items-center justify-center h-[48px] mb-4">
                   <span className="text-blue-900 font-semibold text-base flex items-center h-full justify-center">
                     {selectedDay !== null ? new Date(year, month - 1, selectedDay).toLocaleString('en-US', { month: 'short', day: 'numeric' }) : ''}
@@ -279,9 +322,9 @@ export default function AppointmentSystem() {
                   )}
                 </div>
                 {selectedTime && (
-                  <div className="mt-4 p-4 bg-white border-2 border-blue-300 rounded-xl flex items-center gap-4 shadow-sm">
-                    <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
-                      <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <div className="mt-4 p-3 lg:p-4 bg-white border-2 border-blue-300 rounded-xl flex items-center gap-2 lg:gap-4 shadow-sm">
+                    <div className="flex items-center justify-center w-8 h-8 lg:w-12 lg:h-12 bg-blue-100 rounded-full">
+                      <Check className="w-7 h-7 text-blue-600" />
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                       <span className="text-sm font-semibold text-blue-900">
@@ -293,9 +336,10 @@ export default function AppointmentSystem() {
                     </div>
                     <div>
                       <Button variant="primary" onClick={handleBook} disabled={bookingLoading}>
-                        {bookingLoading ? (
-                          <span className="flex items-center gap-2"><LoadingIndicator /><span>Booking...</span></span>
-                        ) : <span>Book</span>}
+                        {bookingLoading && (
+                          <span className="pr-2"><LoadingIndicator size="sm" /></span>
+                        )}
+                        <span>Book</span>
                       </Button>
                     </div>
                   </div>
@@ -303,8 +347,8 @@ export default function AppointmentSystem() {
                 {bookingResult && !bookingError && (
                   <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex flex-col items-center animate-fade-in">
                     <div className="flex items-center gap-2 mb-2">
-                      <svg className="w-7 h-7 text-green-500 animate-bounce-in" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                      <span className="text-lg font-bold text-green-700">Booking Confirmed!</span>
+                      <Check className="w-7 h-7 text-green-500 animate-bounce-in" />
+                      <span className="text-md font-bold text-green-700">Booking Confirmed!</span>
                     </div>
                     <div className="text-green-900 text-sm text-center">
                       Your appointment is booked for <br />
@@ -315,8 +359,8 @@ export default function AppointmentSystem() {
                 {bookingError && (
                   <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex flex-col items-center animate-fade-in">
                     <div className="flex items-center gap-2 mb-2">
-                      <svg className="w-7 h-7 text-red-500 animate-bounce-in" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                      <span className="text-lg font-bold text-red-700">Booking Failed</span>
+                      <X className="w-7 h-7 text-red-500 animate-bounce-in" />
+                      <span className="text-md font-bold text-red-700">Booking Failed</span>
                     </div>
                     <div className="text-red-900 text-sm text-center">
                       {bookingError}
