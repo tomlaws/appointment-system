@@ -23,6 +23,21 @@ export * from './enums.ts';
  */
 export type User = Prisma.UserModel
 /**
+ * Model Session
+ * 
+ */
+export type Session = Prisma.SessionModel
+/**
+ * Model Account
+ * 
+ */
+export type Account = Prisma.AccountModel
+/**
+ * Model Verification
+ * 
+ */
+export type Verification = Prisma.VerificationModel
+/**
  * Model Booking
  * 
  */
@@ -32,8 +47,3 @@ export type Booking = Prisma.BookingModel
  * 
  */
 export type TimeSlot = Prisma.TimeSlotModel
-/**
- * Model OneTimeCode
- * 
- */
-export type OneTimeCode = Prisma.OneTimeCodeModel

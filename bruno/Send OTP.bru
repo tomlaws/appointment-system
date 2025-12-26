@@ -1,18 +1,19 @@
 meta {
   name: Send OTP
   type: http
-  seq: 1
+  seq: 2
 }
 
 post {
-  url: {{HOST}}/api/otp/send
+  url: {{HOST}}/api/auth/email-otp/send-verification-otp
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "email": "hwlaw1998@gmail.com"
+    "email": "hwlaw1998g@gmail.com",
+    "type": "sign-in"
   }
 }
 

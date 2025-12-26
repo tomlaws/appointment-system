@@ -1,19 +1,13 @@
 meta {
-  name: Create Booking
+  name: Calendar
   type: http
-  seq: 4
+  seq: 6
 }
 
-post {
+get {
   url: {{HOST}}/api/bookings
   body: json
   auth: inherit
-}
-
-body:json {
-  {
-    "time": "2025-12-27T02:30:00.000Z"
-  }
 }
 
 settings {

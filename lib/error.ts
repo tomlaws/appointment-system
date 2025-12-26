@@ -35,9 +35,16 @@ class AlreadyBookedError extends AppError {
     }
 }
 
+class BookingNotFoundError extends AppError {
+    constructor() {
+        super('Booking not found', 404, 1005);
+    }
+}
+
 export const AppErrors = {
     InvalidTimeSlotError,
     InvalidOneTimeCodeError,
     TimeSlotFullError,
     AlreadyBookedError,
+    BookingNotFoundError
 };

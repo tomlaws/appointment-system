@@ -1,65 +1,289 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useState } from 'react';
+import Button from '../components/ui/Button';
+import LoadingIndicator from '../components/ui/LoadingIndicator';
+import type { TimeSlot } from '../generated/prisma/browser';
 
-export default function Home() {
+function fetchCalendar(year: number, month: number) {
+  return fetch(`/api/calendar?year=${year}&month=${month}`).then(res => res.json());
+}
+
+function fetchTimeSlots(year: number, month: number, day: number) {
+  return fetch(`/api/timeslots?year=${year}&month=${month}&day=${day}`).then(res => res.json());
+}
+
+function createBooking(time: Date) {
+  return fetch('/api/bookings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ time })
+  }).then(async res => {
+    const data = await res.json();
+    return { status: res.status, data };
+  });
+}
+
+export default function AppointmentSystem() {
+  const today = new Date();
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth() + 1);
+  const [day, setDay] = useState(today.getDate());
+  const [calendar, setCalendar] = useState<any | null>(null);
+  const [slots, setSlots] = useState<TimeSlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [selectedTime, setSelectedTimeRaw] = useState<Date | null>(null);
+  const setSelectedTime = (time: Date | null) => {
+    setSelectedTimeRaw(time);
+    if (time !== null) {
+      setBookingResult(null);
+      setBookingError(null); // Clear error when selecting a timeslot
+    }
+  };
+  const [selectedDay, setSelectedDay] = useState<number | null>(today.getDate());
+  const [bookingResult, setBookingResult] = useState<{ time?: string | Date } | null>(null);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [bookingLoading, setBookingLoading] = useState(false);
+
+  useEffect(() => {
+    fetchCalendar(year, month).then(setCalendar);
+  }, [year, month]);
+
+
+  // Layout will be handled with responsive CSS classes in globals.css
+
+  useEffect(() => {
+    if (selectedDay !== null) {
+      setSlotsLoading(true);
+      fetchTimeSlots(year, month, selectedDay)
+        .then((data) => setSlots(data))
+        .catch(() => setSlots([]))
+        .finally(() => setSlotsLoading(false));
+    } else {
+      setSlots([]);
+    }
+  }, [year, month, selectedDay]);
+
+
+  const handleBook = async () => {
+    if (!selectedTime) return;
+    setBookingLoading(true);
+    setBookingError(null);
+    try {
+      const result = await createBooking(selectedTime);
+      if (result.status === 201) {
+        setBookingResult(result.data);
+        setBookingError(null);
+      } else {
+        setBookingResult(null);
+        setBookingError(result.data?.message || 'Booking failed.');
+      }
+      setSelectedTime(null); // Deselect timeslot after booking
+      if (selectedDay !== null) {
+        fetchTimeSlots(year, month, selectedDay).then(setSlots);
+      }
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  // Calendar grid helpers
+  function getCalendarMatrix() {
+    if (!calendar) return [];
+    const days = calendar.days;
+    const firstDate = new Date(days[0].date);
+    const firstDayOfWeek = firstDate.getDay(); // 0=Sunday
+    const matrix = [];
+    let week = [];
+    // Fill leading blanks
+    for (let i = 0; i < firstDayOfWeek; i++) week.push(null);
+    for (let i = 0; i < days.length; i++) {
+      week.push(days[i]);
+      if (week.length === 7) {
+        matrix.push(week);
+        week = [];
+      }
+    }
+    if (week.length) {
+      while (week.length < 7) week.push(null);
+      matrix.push(week);
+    }
+    return matrix;
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="max-w-[1200px] mx-auto p-5 overflow-x-hidden font-sans w-full">
+      <div className="flex flex-wrap gap-5 items-start w-full">
+        <div className="flex-1 min-w-[320px]">
+          <div className="bg-white rounded-xl p-4 w-full flex flex-col h-[540px] border border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between h-[48px] mb-4">
+              <div className="w-12 flex justify-start items-center h-full">
+                <button
+                  aria-label="Previous month"
+                  onClick={() => {
+                    if (month === 1) {
+                      setMonth(12);
+                      setYear(year - 1);
+                    } else {
+                      setMonth(month - 1);
+                    }
+                    setSelectedDay(1);
+                  }}
+                  className="border border-blue-100 bg-white p-2 rounded-lg cursor-pointer"
+                >◀</button>
+              </div>
+              <div className="flex-1 flex items-center justify-center h-full">
+                <span className="text-center font-bold text-blue-900 text-base">
+                  {new Date(year, month - 1).toLocaleString(undefined, { month: 'long' })} {year}
+                </span>
+              </div>
+              <div className="w-12 flex justify-end items-center h-full">
+                <button
+                  aria-label="Next month"
+                  onClick={() => {
+                    if (month === 12) {
+                      setMonth(1);
+                      setYear(year + 1);
+                    } else {
+                      setMonth(month + 1);
+                    }
+                    setSelectedDay(1);
+                  }}
+                  className="border border-blue-100 bg-white p-2 rounded-lg cursor-pointer"
+                >▶</button>
+              </div>
+            </div>
+            <div className="grid grid-cols-7 gap-2 text-blue-900 font-bold text-xs text-center">
+              <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            </div>
+            <div className="grid grid-cols-7 gap-2 mt-3 flex-1 min-h-[288px]">
+              {calendar ? getCalendarMatrix().flat().map((d, idx) => {
+                if (!d) return <div key={idx} />;
+                const dateObj = new Date(d.date);
+                const dayNum = dateObj.getDate();
+                const isSelected = selectedDay === dayNum;
+                const isFull = Boolean(d.full);
+                return (
+                  <div
+                    key={idx}
+                    className={[
+                      'p-3 rounded-lg cursor-pointer border box-border transition-colors flex items-center justify-center',
+                      isFull ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-white border-blue-100',
+                      isSelected ? '!bg-blue-200 !border-blue-400 !text-blue-900' : '',
+                    ].join(' ')}
+                    onClick={() => {
+                      if (!isFull) {
+                        setSelectedDay(dayNum);
+                        setSelectedTime(null);
+                      }
+                    }}
+                  >
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="font-bold text-sm">{dayNum}</span>
+                      <span className={isFull ? "text-gray-400 text-base mt-0.5" : "text-green-600 text-base mt-0.5"} title={isFull ? "Full" : "Available"}>●</span>
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div key="loading" className="col-span-7 flex flex-col justify-center items-center h-[288px]">
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-2"><LoadingIndicator /><span>Loading calendar...</span></span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="flex-1 min-w-[300px] flex flex-col w-full md:flex-[0_0_360px] md:w-[360px]">
+          {selectedDay !== null && (
+            <div className="bg-white p-3 rounded-xl w-full flex flex-col h-[540px] border border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-center h-[48px] mb-4">
+                <span className="text-blue-900 font-semibold text-base flex items-center h-full justify-center">
+                  {selectedDay !== null ? new Date(year, month - 1, selectedDay).toLocaleString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                </span>
+              </div>
+              <div className="relative flex-1 min-h-0 overflow-y-auto">
+                {slotsLoading ? (
+                  <div className="absolute inset-0 flex justify-center items-center z-10">
+                    <span className="flex items-center gap-2"><LoadingIndicator /><span>Loading time slots...</span></span>
+                  </div>
+                ) : slots.length === 0 ? (
+                  <div className="text-blue-900">No slots available</div>
+                ) : (
+                  slots.map((slot, i) => {
+                    const isSelected = selectedTime && new Date(selectedTime).getTime() === new Date(slot.time).getTime();
+                    return (
+                      <div
+                        key={i}
+                        className={[
+                          'flex items-center p-3 rounded-lg mb-2 cursor-pointer transition-colors',
+                          [
+                            slot.openings > 0
+                              ? 'bg-white border border-gray-300 hover:bg-gray-100 transition-colors'
+                              : 'bg-gray-50 border border-gray-200',
+                            slot.openings === 0 ? 'opacity-60 pointer-events-none' : '',
+                            isSelected ? '!bg-blue-200 !border-blue-400 !text-blue-900' : '',
+                          ].filter(Boolean).join(' '),
+                        ].join(' ')}
+                        onClick={() => slot.openings > 0 && setSelectedTime(slot.time)}
+                      >
+                        <div className="flex-1">
+                          <div className="font-bold">{new Date(slot.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+                          <div className="text-xs text-blue-900">{slot.openings} opening{slot.openings !== 1 ? 's' : ''}</div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              {selectedTime && (
+                <div className="mt-4 p-4 bg-white border-2 border-blue-300 rounded-xl flex items-center gap-4 shadow-sm">
+                  <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
+                    <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <span className="text-sm font-semibold text-blue-900">
+                      {new Date(selectedTime).toLocaleDateString('en-US')}
+                    </span>
+                    <span className="text-xs text-blue-900 mt-0.5">
+                      {new Date(selectedTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <div>
+                    <Button variant="primary" onClick={handleBook} disabled={bookingLoading}>
+                      {bookingLoading ? (
+                        <span className="flex items-center gap-2"><LoadingIndicator /><span>Booking...</span></span>
+                      ) : <span>Book</span>}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {bookingResult && !bookingError && (
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex flex-col items-center animate-fade-in">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-7 h-7 text-green-500 animate-bounce-in" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    <span className="text-lg font-bold text-green-700">Booking Confirmed!</span>
+                  </div>
+                  <div className="text-green-900 text-sm text-center">
+                    Your appointment is booked for <br />
+                    <span className="font-semibold">{bookingResult.time ? new Date(bookingResult.time).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : ''}</span>
+                  </div>
+                </div>
+              )}
+              {bookingError && (
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex flex-col items-center animate-fade-in">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-7 h-7 text-red-500 animate-bounce-in" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    <span className="text-lg font-bold text-red-700">Booking Failed</span>
+                  </div>
+                  <div className="text-red-900 text-sm text-center">
+                    {bookingError}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

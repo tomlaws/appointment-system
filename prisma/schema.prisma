@@ -5,38 +5,86 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
-  moduleFormat = "esm"
+  provider               = "prisma-client"
+  output                 = "../generated/prisma"
+  moduleFormat           = "esm"
   generatedFileExtension = "ts"
-  importFileExtension = "ts"
+  importFileExtension    = "ts"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-enum UserStatus {
-  ANONYMOUS
-  REGISTERED
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  // Relations
+  bookings Booking[]
+
+  @@unique([email])
+  @@map("user")
 }
 
-model User {
-  id        String   @id @default(uuid())
-  status    UserStatus
-  email     String   @unique
-  password  String?
-  firstName String
-  lastName  String
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  bookings Booking[]
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String   @unique
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
 }
 
 model Booking {
   id        String   @id @default(uuid())
-  user      User?     @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String?
   time      DateTime
   createdAt DateTime @default(now())
@@ -49,16 +97,6 @@ model TimeSlot {
   id        String   @id @default(uuid())
   time      DateTime @unique
   openings  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model OneTimeCode {
-  id        String   @id @default(uuid())
-  email     String
-  code      String   @unique
-  used      Boolean  @default(false)
-  expiry    DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

@@ -2,12 +2,19 @@ import { Hono } from 'hono';
 import { handle } from 'hono/vercel'
 import { AppError } from '../../../lib/error';
 import { z } from 'zod';
-import { zValidator } from '@hono/zod-validator'
-import { getUserByEmail, createBooking, getCalendar, getEmailByOneTimeCode, getTimeSlotsForDate, generateAndSendOneTimeCode } from '../../../lib/app';
-import { optionalAuthMiddleware } from '../../../lib/auth';
-import jwt from 'jsonwebtoken';
+import { zValidator } from '@hono/zod-validator';
+import { createBooking, getCalendar, getTimeSlotsForDate, cancelBooking, getBookings } from '../../../lib/app';
+import { auth, authMiddleware, setupHonoAuth } from '../../../lib/auth';
 
-const app = new Hono().basePath('/api')
+const app = new Hono<{
+    Variables: {
+        user: typeof auth.$Infer.Session.user | null;
+        session: typeof auth.$Infer.Session.session | null
+    }
+}>().basePath('/api')
+
+setupHonoAuth(app);
+
 app.onError((err, c) => {
     if (err instanceof AppError) {
         return c.json({
@@ -18,6 +25,20 @@ app.onError((err, c) => {
     console.error(err);
     return c.text('Internal Server Error', 500);
 });
+
+app.use("*", async (c, next) => {
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    if (!session) {
+        c.set("user", null);
+        c.set("session", null);
+        await next();
+        return;
+    }
+    c.set("user", session.user);
+    c.set("session", session.session);
+    await next();
+});
+app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 app.get(
     '/calendar',
@@ -44,68 +65,43 @@ app.get(
     });
 
 app.post(
-    '/otp/send',
-    zValidator('json', z.object({
-        email: z.email(),
-    })),
-    async (c) => {
-        // Generate and send one-time code to email
-        const email = c.req.valid('json').email;
-        await generateAndSendOneTimeCode(email);
-        return c.json({ message: 'OTP sent' });
-    });
-
-app.post(
-    '/otp/verify',
-    zValidator('json', z.object({
-        code: z.string(),
-    })),
-    async (c) => {
-        const email = await getEmailByOneTimeCode(c.req.valid('json').code);
-        // Sign a JWT or create a session for the user here
-        const token = jwt.sign({ email }, process.env.JWT_SECRET!, { expiresIn: '30d' });
-        return c.json({ token });
-    });
-
-app.post(
     '/bookings',
+    authMiddleware,
     zValidator('json', z.object({
-        time: z.coerce.date(),
-        anonymous: z.object({
-            token: z.string(),
-            firstName: z.string(),
-            lastName: z.string(),
-        }).optional(),
+        time: z.coerce.date()
     })),
-    optionalAuthMiddleware,
     async (c) => {
-        const auth = c.get('auth');
-        const anonymous = c.req.valid('json').anonymous;
-        if (anonymous) {
-            const token = anonymous.token;
-            // Parse json
-            const payload = jwt.verify(token, process.env.JWT_SECRET!);
-            const email = (payload as any).email;
-            if (!email) {
-                return c.json({ message: 'Invalid anonymous token' }, 401);
-            }
-            // Create anonymous user if not exists, returns existing user if already exists
-            const user = await getUserByEmail(
-                email,
-                anonymous.firstName,
-                anonymous.lastName
-            );
-            const booking = await createBooking(user.id, c.req.valid('json').time);
-            return c.json(booking, 201);
-        } else if (auth) {
-            // Authenticated user
-            const { time } = c.req.valid('json');
-            const booking = await createBooking(auth.id, time);
-            return c.json(booking, 201);
-        } else {
-            // Authenticated user or one-time code must be provided
-            return c.json({ message: 'User required' }, 401);
-        }
+        const user = c.get('user');
+        // Authenticated user
+        const { time } = c.req.valid('json');
+        const booking = await createBooking(user.id, time);
+        return c.json(booking, 201);
+    });
+
+app.delete(
+    '/bookings/:id',
+    authMiddleware,
+    zValidator('param', z.object({
+        id: z.uuid(),
+    })),
+    async (c) => {
+        const user = c.get('user');
+        const bookingId = c.req.param('id');
+        await cancelBooking(user.id, bookingId);
+        return c.json({ message: 'Booking deleted' });
+    });
+
+app.get(
+    '/bookings',
+    zValidator('query', z.object({
+        after: z.string().uuid().optional(),
+    })),
+    authMiddleware,
+    async (c) => {
+        const user = c.get('user');
+        const after = c.req.query('after');
+        const bookings = await getBookings(user.id, after, 10);
+        return c.json(bookings);
     });
 
 export const GET = handle(app)
