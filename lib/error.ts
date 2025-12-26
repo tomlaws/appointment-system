@@ -41,10 +41,17 @@ class BookingNotFoundError extends AppError {
     }
 }
 
+class TimeSlotPassedError extends AppError {
+    constructor() {
+        super('The selected time slot has already passed', 400, 1006);
+    }
+}
+
 export const AppErrors = {
     InvalidTimeSlotError,
     InvalidOneTimeCodeError,
     TimeSlotFullError,
     AlreadyBookedError,
-    BookingNotFoundError
+    BookingNotFoundError,
+    TimeSlotPassedError,
 };

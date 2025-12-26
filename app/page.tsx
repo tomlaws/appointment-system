@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Button from '../components/ui/Button';
 import LoadingIndicator from '../components/ui/LoadingIndicator';
 import type { TimeSlot } from '../generated/prisma/browser';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { VCenter } from '@/components/ui/VCenter';
 
 function fetchCalendar(year: number, month: number) {
@@ -30,8 +31,8 @@ export default function AppointmentSystem() {
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [day, setDay] = useState(today.getDate());
   const [calendar, setCalendar] = useState<any | null>(null);
-  const [slots, setSlots] = useState<TimeSlot[]>([]);
-  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slots, setSlots] = useState<(TimeSlot & { past: boolean })[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(true);
   const [selectedTime, setSelectedTimeRaw] = useState<Date | null>(null);
   const setSelectedTime = (time: Date | null) => {
     setSelectedTimeRaw(time);
@@ -44,9 +45,11 @@ export default function AppointmentSystem() {
   const [bookingResult, setBookingResult] = useState<{ time?: string | Date } | null>(null);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [calendarLoading, setCalendarLoading] = useState(false);
 
   useEffect(() => {
-    fetchCalendar(year, month).then(setCalendar);
+    setCalendarLoading(true);
+    fetchCalendar(year, month).then(setCalendar).finally(() => setCalendarLoading(false));
   }, [year, month]);
 
 
@@ -121,77 +124,111 @@ export default function AppointmentSystem() {
                 <div className="w-12 flex justify-start items-center h-full">
                   <button
                     aria-label="Previous month"
+                    disabled={month === today.getMonth() + 1 && year === today.getFullYear()}
                     onClick={() => {
+                      let newMonth, newYear;
                       if (month === 1) {
-                        setMonth(12);
-                        setYear(year - 1);
+                        newMonth = 12;
+                        newYear = year - 1;
                       } else {
-                        setMonth(month - 1);
+                        newMonth = month - 1;
+                        newYear = year;
                       }
-                      setSelectedDay(1);
+                      setMonth(newMonth);
+                      setYear(newYear);
+                      if (newMonth === today.getMonth() + 1 && newYear === today.getFullYear()) {
+                        setSelectedDay(today.getDate());
+                      } else {
+                        setSelectedDay(1);
+                      }
                     }}
-                    className="border border-blue-100 bg-white p-2 rounded-lg cursor-pointer"
-                  >◀</button>
+                    className={`border border-blue-100 bg-white p-2 rounded-lg transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 ${month === today.getMonth() + 1 && year === today.getFullYear() ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  ><ChevronLeft size={16} /></button>
                 </div>
                 <div className="flex-1 flex items-center justify-center h-full">
                   <span className="text-center font-bold text-blue-900 text-base">
-                    {new Date(year, month - 1).toLocaleString(undefined, { month: 'long' })} {year}
+                    {new Date(year, month - 1).toLocaleString('en-US', { month: 'long' })} {year}
                   </span>
                 </div>
                 <div className="w-12 flex justify-end items-center h-full">
                   <button
                     aria-label="Next month"
                     onClick={() => {
+                      let newMonth, newYear;
                       if (month === 12) {
-                        setMonth(1);
-                        setYear(year + 1);
+                        newMonth = 1;
+                        newYear = year + 1;
                       } else {
-                        setMonth(month + 1);
+                        newMonth = month + 1;
+                        newYear = year;
                       }
-                      setSelectedDay(1);
+                      setMonth(newMonth);
+                      setYear(newYear);
+                      if (newMonth === today.getMonth() + 1 && newYear === today.getFullYear()) {
+                        setSelectedDay(today.getDate());
+                      } else {
+                        setSelectedDay(1);
+                      }
                     }}
-                    className="border border-blue-100 bg-white p-2 rounded-lg cursor-pointer"
-                  >▶</button>
+                    className="border border-blue-100 bg-white p-2 rounded-lg cursor-pointer transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
+                  ><ChevronRight size={16} /></button>
                 </div>
               </div>
               <div className="grid grid-cols-7 gap-2 text-blue-900 font-bold text-xs text-center">
                 <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
               </div>
-              <div className="grid grid-cols-7 gap-2 mt-3 flex-1 min-h-[288px]">
-                {calendar ? getCalendarMatrix().flat().map((d, idx) => {
-                  if (!d) return <div key={idx} />;
-                  const dateObj = new Date(d.date);
-                  const dayNum = dateObj.getDate();
-                  const isSelected = selectedDay === dayNum;
-                  const isFull = Boolean(d.full);
-                  return (
-                    <div
-                      key={idx}
-                      className={[
-                        'p-3 rounded-lg cursor-pointer border box-border transition-colors flex items-center justify-center',
-                        isFull ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-white border-blue-100',
-                        isSelected ? '!bg-blue-200 !border-blue-400 !text-blue-900' : '',
-                      ].join(' ')}
-                      onClick={() => {
-                        if (!isFull) {
-                          setSelectedDay(dayNum);
-                          setSelectedTime(null);
-                        }
-                      }}
-                    >
-                      <div className="flex flex-col items-center justify-center">
-                        <span className="font-bold text-sm">{dayNum}</span>
-                        <span className={isFull ? "text-gray-400 text-base mt-0.5" : "text-green-600 text-base mt-0.5"} title={isFull ? "Full" : "Available"}>●</span>
-                      </div>
-                    </div>
-                  );
-                }) : (
-                  <div key="loading" className="col-span-7 flex flex-col justify-center items-center h-[288px]">
+              <div className="flex flex-col gap-2 mt-3 flex-1 min-h-[288px]">
+                {calendarLoading || !calendar ? (
+                  <div key="loading" className="flex-1 flex flex-col justify-center items-center">
                     <div className="flex items-center gap-2">
-                      <span className="flex items-center gap-2"><LoadingIndicator /><span>Loading calendar...</span></span>
+                      <LoadingIndicator />
+                      <span>Loading calendar...</span>
                     </div>
                   </div>
-                )}
+                ) : getCalendarMatrix().map((week, wIdx) => (
+                  <div key={wIdx} className="flex flex-1 gap-2">
+                    {week.map((d, idx) => {
+                      if (!d) return <div key={idx} className="flex-1" />;
+                      const dateObj = new Date(d.date);
+                      const dayNum = dateObj.getDate();
+                      const isSelected = selectedDay === dayNum;
+                      const isFull = Boolean(d.full);
+                      const isPast = Boolean(d.past);
+                      const disabled = isPast;
+                      return (
+                        <div key={idx} className="flex-1 flex items-stretch">
+                          <button
+                            type="button"
+                            className={[
+                              'w-full h-full p-3 rounded-lg cursor-pointer border box-border transition-colors flex flex-col items-center justify-center relative',
+                              isFull && !isPast ? 'bg-gray-100 text-gray-500 border-gray-300' : 'bg-white border-blue-100',
+                              isSelected ? '!bg-blue-200 !border-blue-400 !text-blue-900' : '',
+                              isPast ? 'opacity-50 pointer-events-none cursor-not-allowed' : '',
+                            ].join(' ')}
+                            onClick={() => {
+                              if (!disabled) {
+                                setSelectedDay(dayNum);
+                                setSelectedTime(null);
+                              }
+                            }}
+                            tabIndex={disabled ? -1 : 0}
+                            disabled={disabled}
+                          >
+                            <span className={["font-bold text-sm z-10", isSelected && isFull && !isPast ? "text-blue-900" : ""].join(" ")}>{dayNum}</span>
+                            {isFull && !isPast && (
+                              <span className={[
+                                "mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold pointer-events-none select-none border",
+                                isSelected && isFull && !isPast
+                                  ? "bg-blue-100 text-blue-700 border-blue-300"
+                                  : "bg-gray-200 text-gray-600 border-gray-200"
+                              ].join(" ")} style={{ lineHeight: 1 }}>Full</span>
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -209,9 +246,13 @@ export default function AppointmentSystem() {
                       <span className="flex items-center gap-2"><LoadingIndicator /><span>Loading time slots...</span></span>
                     </div>
                   ) : slots.length === 0 ? (
-                    <div className="text-blue-900">No slots available</div>
+                    <div className="absolute inset-0 flex justify-center items-center z-10">
+                      <span className="flex items-center gap-2">
+                        <div className="text-blue-900">No slots available</div>
+                      </span>
+                    </div>
                   ) : (
-                    slots.map((slot, i) => {
+                    slots.filter(slot => !slot.past).map((slot, i) => {
                       const isSelected = selectedTime && new Date(selectedTime).getTime() === new Date(slot.time).getTime();
                       return (
                         <div

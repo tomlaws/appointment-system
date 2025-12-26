@@ -97,13 +97,15 @@ app.get(
     '/bookings',
     zValidator('query', z.object({
         after: z.uuid().optional(),
+        past: z.coerce.boolean().optional(),
     })),
     authMiddleware,
     async (c) => {
         const user = c.get('user');
         const after = c.req.query('after');
+        const past = c.req.query('past') === 'true';
         const limit = 20;
-        const [bookings, hasMore] = await getBookings(user.id, after, limit);
+        const [bookings, hasMore] = await getBookings(user.id, after, limit, past);
         c.res.headers.set('X-Limit', limit.toString());
         c.res.headers.set('X-Has-More', hasMore ? 'true' : 'false');
         return c.json(bookings);

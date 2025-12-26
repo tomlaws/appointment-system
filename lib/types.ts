@@ -1,3 +1,3 @@
 export interface Calendar {
-    days: { date: Date; full: boolean }[];
+    days: { date: Date; full: boolean, past: boolean }[];
 }

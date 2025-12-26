@@ -28,7 +28,7 @@ export async function getCalendar(year: number, month: number): Promise<Calendar
 
     // Generate calendar
     const daysInMonth = new Date(firstDayOfMonth.getFullYear(), firstDayOfMonth.getMonth() + 1, 0).getDate();
-    const calendarDays: { date: Date; full: boolean }[] = [];
+    const calendarDays: Calendar['days'] = [];
     for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(firstDayOfMonth.getFullYear(), firstDayOfMonth.getMonth(), day);
         const slotsForDay = timeSlots.filter(slot =>
@@ -45,8 +45,8 @@ export async function getCalendar(year: number, month: number): Promise<Calendar
                 break;
             }
         }
-
-        calendarDays.push({ date, full });
+        const past = date < new Date(new Date().setHours(0, 0, 0, 0));
+        calendarDays.push({ date, full, past });
     }
 
     return { days: calendarDays };
@@ -79,9 +79,11 @@ export async function getTimeSlotsForDate(year: number, month: number, day: numb
             if (dbSlot) {
                 timeSlots.push(dbSlot);
             } else {
+                const past = time < new Date();
                 timeSlots.push({
                     id: null,
                     time,
+                    past,
                     openings: Config.timeslotCapacity
                 });
             }
@@ -94,7 +96,6 @@ export async function getTimeSlotsForDate(year: number, month: number, day: numb
 async function validateSlotTime(time: Date) {
     const hour = time.getHours();
     const minute = time.getMinutes();
-    console.log(`Validating time slot: ${hour}:${minute}`);
     const officeHours = Config.officeHours;
     const slotDuration = Config.timeslotDurationMinutes;
     for (const { start, end } of officeHours) {
@@ -108,11 +109,15 @@ async function validateSlotTime(time: Date) {
 }
 
 export async function createBooking(userId: string, time: Date) {
+    // Check if it is a future time
+    const now = new Date();
+    if (time <= now) {
+        throw new AppErrors.TimeSlotPassedError();
+    }
     const isValidTime = await validateSlotTime(time);
     if (!isValidTime) {
         throw new AppErrors.InvalidTimeSlotError();
     }
-    console.log(`Creating booking for user ${userId} at time ${time.toISOString()}`);
     return prisma.$transaction(async (tx) => {
         // Optimistic locking: check for existing confirmed booking for this user and time
         const existing = await tx.booking.findFirst({
@@ -192,10 +197,13 @@ export async function createBooking(userId: string, time: Date) {
     });
 }
 
-export async function getBookings(userId: string, after: string | undefined, limit: number) {
+export async function getBookings(userId: string, after: string | undefined, limit: number, past: boolean = false) {
     const bookings = await prisma.booking.findMany({
-        where: { userId },
-        orderBy: { time: 'asc' },
+        where: { 
+            userId,
+            time: past ? { lt: new Date() } : { gte: new Date() }
+        },
+        orderBy: { time: past ? 'desc' : 'asc' },
         ...after ? {
             cursor: { id: after },
             skip: 1,

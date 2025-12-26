@@ -3,6 +3,7 @@ import LoadingIndicator from "@/components/ui/LoadingIndicator";
 import { useEffect, useState, useCallback } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useRouter } from "next/navigation";
+import { Calendar, Clock, X } from 'lucide-react';
 import { VCenter } from "@/components/ui/VCenter";
 
 interface Booking {
@@ -14,9 +15,10 @@ interface Booking {
 interface BookingItemProps {
   booking: Booking;
   onCancelled: (id: string) => void;
+  filter: 'future' | 'past';
 }
 
-function BookingItem({ booking, onCancelled }: BookingItemProps) {
+function BookingItem({ booking, onCancelled, filter }: BookingItemProps) {
   const router = useRouter();
   const [cancelling, setCancelling] = useState(false);
 
@@ -42,24 +44,24 @@ function BookingItem({ booking, onCancelled }: BookingItemProps) {
       className="w-full min-h-[90px] p-6 bg-white border border-blue-100 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center gap-4"
     >
       <div className="flex-1 flex flex-col gap-1">
-        <span className="font-semibold text-blue-900 text-lg">
+        <span className="font-semibold text-blue-900 text-lg flex items-center gap-2">
+          <Clock size={18} />
           {new Date(booking.time).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
         </span>
-        <span className={
-          booking.status === 'CONFIRMED'
-            ? 'text-green-700 font-bold text-sm'
-            : 'text-gray-500 font-semibold text-sm'
-        }>
-          {booking.status.charAt(0) + booking.status.slice(1).toLowerCase()}
+        <span className={`w-fit inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase border ${booking.status === 'CONFIRMED'
+            ? 'bg-green-100 text-green-700 border-green-300'
+            : 'bg-gray-100 text-gray-700 border-gray-300'
+          }`}>
+          {booking.status}
         </span>
       </div>
-      {booking.status === 'CONFIRMED' && (
+      {booking.status === 'CONFIRMED' && filter !== 'past' && (
         <button
           className="px-5 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200 transition disabled:opacity-60 disabled:cursor-not-allowed"
           onClick={handleCancel}
           disabled={cancelling}
         >
-          {cancelling ? 'Cancelling...' : 'Cancel Booking'}
+          {cancelling ? 'Cancelling...' : <><X size={16} className="inline mr-1" /> Cancel Booking</>}
         </button>
       )}
     </li>
@@ -72,10 +74,13 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const [filter, setFilter] = useState<'future' | 'past'>('future');
 
   // Fetch bookings (initial or paginated)
-  const fetchBookings = useCallback(async (after?: string) => {
-    const url = after ? `/api/bookings?after=${after}` : "/api/bookings";
+  const fetchBookings = useCallback(async (after?: string, filter?: 'future' | 'past') => {
+    const url = after
+      ? `/api/bookings?after=${after}${filter === 'past' ? '&past=true' : ''}`
+      : (filter === 'past' ? '/api/bookings?past=true' : '/api/bookings');
     const res = await fetch(url);
     const hasMore = res.headers.get("X-Has-More");
     if (!res.ok) {
@@ -89,7 +94,7 @@ export default function BookingsPage() {
   // Initial load
   useEffect(() => {
     setLoading(true);
-    fetchBookings()
+    fetchBookings(undefined, filter)
       .then(({ data, hasMore }) => {
         setBookings(data);
         setHasMore(hasMore);
@@ -100,7 +105,7 @@ export default function BookingsPage() {
         setBookings([]);
       })
       .finally(() => setLoading(false));
-  }, [fetchBookings]);
+  }, [filter]);
 
   // Load more bookings for infinite scroll
   const fetchMoreBookings = async () => {
@@ -117,45 +122,48 @@ export default function BookingsPage() {
 
 
   return (
-    <>
-      {loading ? (
-        <VCenter>
-          <div className="relative w-full" style={{ minHeight: '200px' }}>
-            <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
-              <span className="flex items-center gap-2"><LoadingIndicator /><span>Loading bookings...</span></span>
-            </div>
+    <div className="max-w-6xl mx-auto p-4 font-sans w-full">
+      <h1 className="text-2xl font-bold mb-4 text-blue-900 flex items-center gap-2"><Calendar size={24} /> My Bookings</h1>
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => { setBookings([]); setHasMore(true); setFilter('future'); }}
+          className={`px-4 py-2 rounded-lg font-semibold transition ${filter === 'future' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+        >
+          Future Bookings
+        </button>
+        <button
+          onClick={() => { setBookings([]); setHasMore(true); setFilter('past'); }}
+          className={`px-4 py-2 rounded-lg font-semibold transition ${filter === 'past' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+        >
+          Past Bookings
+        </button>
+      </div>
+      <InfiniteScroll
+        dataLength={bookings.length}
+        next={fetchMoreBookings}
+        hasMore={hasMore}
+        loader={
+          <div className="flex justify-center py-4">
+            <LoadingIndicator />
+            <span className="ml-2 text-blue-900">{bookings.length === 0 ? 'Loading...' : 'Loading more...'}</span>
           </div>
-        </VCenter>
-      ) : bookings.length === 0 ? (
-        <div className="text-blue-900">No bookings found.</div>
-      ) : (
-        <div className="max-w-6xl mx-auto p-4 overflow-x-hidden font-sans w-full">
-          <h1 className="text-2xl font-bold mb-4 text-blue-900">My Bookings</h1>
-          <InfiniteScroll
-            dataLength={bookings.length}
-            next={fetchMoreBookings}
-            hasMore={hasMore}
-            loader={
-              <div className="flex justify-center py-4">
-                <LoadingIndicator />
-                <span className="ml-2 text-blue-900">Loading more...</span>
-              </div>
-            }
-            endMessage={null}
-            scrollThreshold={0.95}
-          >
-            <ul className="space-y-3">
-              {bookings.map((booking) => (
-                <BookingItem
-                  key={booking.id}
-                  booking={booking}
-                  onCancelled={(id) => setBookings((prev) => prev.map(b => b.id === id ? { ...b, status: 'CANCELLED' } : b))}
-                />
-              ))}
-            </ul>
-          </InfiniteScroll>
-        </div>
-      )}
-    </>
+        }
+        endMessage={null}
+        scrollThreshold={0.95}
+      >
+        <ul className="space-y-3 px-2 pb-4">
+          {bookings.map((booking) => (
+            <BookingItem
+              key={booking.id}
+              booking={booking}
+              filter={filter}
+              onCancelled={(id) => setBookings((prev) => prev.map(b => b.id === id ? { ...b, status: 'CANCELLED' } : b))}
+            />
+          ))}
+        </ul>
+      </InfiniteScroll>
+    </div>
   );
 }
