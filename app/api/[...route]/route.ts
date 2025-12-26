@@ -78,8 +78,8 @@ app.post(
         return c.json(booking, 201);
     });
 
-app.delete(
-    '/bookings/:id',
+app.patch(
+    '/bookings/:id/cancel',
     authMiddleware,
     zValidator('param', z.object({
         id: z.uuid(),
@@ -87,9 +87,11 @@ app.delete(
     async (c) => {
         const user = c.get('user');
         const bookingId = c.req.param('id');
+        // Update booking status to CANCELLED
         await cancelBooking(user.id, bookingId);
-        return c.json({ message: 'Booking deleted' });
-    });
+        return c.json({ message: 'Booking cancelled' });
+    }
+);
 
 app.get(
     '/bookings',
@@ -100,10 +102,13 @@ app.get(
     async (c) => {
         const user = c.get('user');
         const after = c.req.query('after');
-        const bookings = await getBookings(user.id, after, 10);
+        const limit = 20;
+        const [bookings, hasMore] = await getBookings(user.id, after, limit);
+        c.res.headers.set('X-Limit', limit.toString());
+        c.res.headers.set('X-Has-More', hasMore ? 'true' : 'false');
         return c.json(bookings);
     });
 
 export const GET = handle(app)
 export const POST = handle(app)
-export const DELETE = handle(app)
+export const PATCH = handle(app)

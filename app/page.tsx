@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Button from '../components/ui/Button';
 import LoadingIndicator from '../components/ui/LoadingIndicator';
 import type { TimeSlot } from '../generated/prisma/browser';
+import { VCenter } from '@/components/ui/VCenter';
 
 function fetchCalendar(year: number, month: number) {
   return fetch(`/api/calendar?year=${year}&month=${month}`).then(res => res.json());
@@ -111,179 +112,181 @@ export default function AppointmentSystem() {
   }
 
   return (
-    <div className="max-w-[1200px] mx-auto p-5 overflow-x-hidden font-sans w-full">
-      <div className="flex flex-wrap gap-5 items-start w-full">
-        <div className="flex-1 min-w-[320px]">
-          <div className="bg-white rounded-xl p-4 w-full flex flex-col h-[540px] border border-gray-200 bg-gray-50">
-            <div className="flex items-center justify-between h-[48px] mb-4">
-              <div className="w-12 flex justify-start items-center h-full">
-                <button
-                  aria-label="Previous month"
-                  onClick={() => {
-                    if (month === 1) {
-                      setMonth(12);
-                      setYear(year - 1);
-                    } else {
-                      setMonth(month - 1);
-                    }
-                    setSelectedDay(1);
-                  }}
-                  className="border border-blue-100 bg-white p-2 rounded-lg cursor-pointer"
-                >◀</button>
-              </div>
-              <div className="flex-1 flex items-center justify-center h-full">
-                <span className="text-center font-bold text-blue-900 text-base">
-                  {new Date(year, month - 1).toLocaleString(undefined, { month: 'long' })} {year}
-                </span>
-              </div>
-              <div className="w-12 flex justify-end items-center h-full">
-                <button
-                  aria-label="Next month"
-                  onClick={() => {
-                    if (month === 12) {
-                      setMonth(1);
-                      setYear(year + 1);
-                    } else {
-                      setMonth(month + 1);
-                    }
-                    setSelectedDay(1);
-                  }}
-                  className="border border-blue-100 bg-white p-2 rounded-lg cursor-pointer"
-                >▶</button>
-              </div>
-            </div>
-            <div className="grid grid-cols-7 gap-2 text-blue-900 font-bold text-xs text-center">
-              <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-            </div>
-            <div className="grid grid-cols-7 gap-2 mt-3 flex-1 min-h-[288px]">
-              {calendar ? getCalendarMatrix().flat().map((d, idx) => {
-                if (!d) return <div key={idx} />;
-                const dateObj = new Date(d.date);
-                const dayNum = dateObj.getDate();
-                const isSelected = selectedDay === dayNum;
-                const isFull = Boolean(d.full);
-                return (
-                  <div
-                    key={idx}
-                    className={[
-                      'p-3 rounded-lg cursor-pointer border box-border transition-colors flex items-center justify-center',
-                      isFull ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-white border-blue-100',
-                      isSelected ? '!bg-blue-200 !border-blue-400 !text-blue-900' : '',
-                    ].join(' ')}
+    <VCenter>
+      <div className="max-w-[1200px] mx-auto p-5 overflow-x-hidden font-sans w-full">
+        <div className="flex flex-wrap gap-5 items-start w-full">
+          <div className="flex-1 min-w-[320px]">
+            <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-6 w-full flex flex-col h-[540px]">
+              <div className="flex items-center justify-between h-[48px] mb-4">
+                <div className="w-12 flex justify-start items-center h-full">
+                  <button
+                    aria-label="Previous month"
                     onClick={() => {
-                      if (!isFull) {
-                        setSelectedDay(dayNum);
-                        setSelectedTime(null);
+                      if (month === 1) {
+                        setMonth(12);
+                        setYear(year - 1);
+                      } else {
+                        setMonth(month - 1);
                       }
+                      setSelectedDay(1);
                     }}
-                  >
-                    <div className="flex flex-col items-center justify-center">
-                      <span className="font-bold text-sm">{dayNum}</span>
-                      <span className={isFull ? "text-gray-400 text-base mt-0.5" : "text-green-600 text-base mt-0.5"} title={isFull ? "Full" : "Available"}>●</span>
+                    className="border border-blue-100 bg-white p-2 rounded-lg cursor-pointer"
+                  >◀</button>
+                </div>
+                <div className="flex-1 flex items-center justify-center h-full">
+                  <span className="text-center font-bold text-blue-900 text-base">
+                    {new Date(year, month - 1).toLocaleString(undefined, { month: 'long' })} {year}
+                  </span>
+                </div>
+                <div className="w-12 flex justify-end items-center h-full">
+                  <button
+                    aria-label="Next month"
+                    onClick={() => {
+                      if (month === 12) {
+                        setMonth(1);
+                        setYear(year + 1);
+                      } else {
+                        setMonth(month + 1);
+                      }
+                      setSelectedDay(1);
+                    }}
+                    className="border border-blue-100 bg-white p-2 rounded-lg cursor-pointer"
+                  >▶</button>
+                </div>
+              </div>
+              <div className="grid grid-cols-7 gap-2 text-blue-900 font-bold text-xs text-center">
+                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+              </div>
+              <div className="grid grid-cols-7 gap-2 mt-3 flex-1 min-h-[288px]">
+                {calendar ? getCalendarMatrix().flat().map((d, idx) => {
+                  if (!d) return <div key={idx} />;
+                  const dateObj = new Date(d.date);
+                  const dayNum = dateObj.getDate();
+                  const isSelected = selectedDay === dayNum;
+                  const isFull = Boolean(d.full);
+                  return (
+                    <div
+                      key={idx}
+                      className={[
+                        'p-3 rounded-lg cursor-pointer border box-border transition-colors flex items-center justify-center',
+                        isFull ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-white border-blue-100',
+                        isSelected ? '!bg-blue-200 !border-blue-400 !text-blue-900' : '',
+                      ].join(' ')}
+                      onClick={() => {
+                        if (!isFull) {
+                          setSelectedDay(dayNum);
+                          setSelectedTime(null);
+                        }
+                      }}
+                    >
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="font-bold text-sm">{dayNum}</span>
+                        <span className={isFull ? "text-gray-400 text-base mt-0.5" : "text-green-600 text-base mt-0.5"} title={isFull ? "Full" : "Available"}>●</span>
+                      </div>
+                    </div>
+                  );
+                }) : (
+                  <div key="loading" className="col-span-7 flex flex-col justify-center items-center h-[288px]">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-2"><LoadingIndicator /><span>Loading calendar...</span></span>
                     </div>
                   </div>
-                );
-              }) : (
-                <div key="loading" className="col-span-7 flex flex-col justify-center items-center h-[288px]">
-                  <div className="flex items-center gap-2">
-                    <span className="flex items-center gap-2"><LoadingIndicator /><span>Loading calendar...</span></span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="flex-1 min-w-[300px] flex flex-col w-full md:flex-[0_0_360px] md:w-[360px]">
-          {selectedDay !== null && (
-            <div className="bg-white p-3 rounded-xl w-full flex flex-col h-[540px] border border-gray-200 bg-gray-50">
-              <div className="flex items-center justify-center h-[48px] mb-4">
-                <span className="text-blue-900 font-semibold text-base flex items-center h-full justify-center">
-                  {selectedDay !== null ? new Date(year, month - 1, selectedDay).toLocaleString('en-US', { month: 'short', day: 'numeric' }) : ''}
-                </span>
-              </div>
-              <div className="relative flex-1 min-h-0 overflow-y-auto">
-                {slotsLoading ? (
-                  <div className="absolute inset-0 flex justify-center items-center z-10">
-                    <span className="flex items-center gap-2"><LoadingIndicator /><span>Loading time slots...</span></span>
-                  </div>
-                ) : slots.length === 0 ? (
-                  <div className="text-blue-900">No slots available</div>
-                ) : (
-                  slots.map((slot, i) => {
-                    const isSelected = selectedTime && new Date(selectedTime).getTime() === new Date(slot.time).getTime();
-                    return (
-                      <div
-                        key={i}
-                        className={[
-                          'flex items-center p-3 rounded-lg mb-2 cursor-pointer transition-colors',
-                          [
-                            slot.openings > 0
-                              ? 'bg-white border border-gray-300 hover:bg-gray-100 transition-colors'
-                              : 'bg-gray-50 border border-gray-200',
-                            slot.openings === 0 ? 'opacity-60 pointer-events-none' : '',
-                            isSelected ? '!bg-blue-200 !border-blue-400 !text-blue-900' : '',
-                          ].filter(Boolean).join(' '),
-                        ].join(' ')}
-                        onClick={() => slot.openings > 0 && setSelectedTime(slot.time)}
-                      >
-                        <div className="flex-1">
-                          <div className="font-bold">{new Date(slot.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
-                          <div className="text-xs text-blue-900">{slot.openings} opening{slot.openings !== 1 ? 's' : ''}</div>
-                        </div>
-                      </div>
-                    );
-                  })
                 )}
               </div>
-              {selectedTime && (
-                <div className="mt-4 p-4 bg-white border-2 border-blue-300 rounded-xl flex items-center gap-4 shadow-sm">
-                  <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
-                    <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                  </div>
-                  <div className="flex-1 min-w-0 flex flex-col justify-center">
-                    <span className="text-sm font-semibold text-blue-900">
-                      {new Date(selectedTime).toLocaleDateString('en-US')}
-                    </span>
-                    <span className="text-xs text-blue-900 mt-0.5">
-                      {new Date(selectedTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                  <div>
-                    <Button variant="primary" onClick={handleBook} disabled={bookingLoading}>
-                      {bookingLoading ? (
-                        <span className="flex items-center gap-2"><LoadingIndicator /><span>Booking...</span></span>
-                      ) : <span>Book</span>}
-                    </Button>
-                  </div>
-                </div>
-              )}
-              {bookingResult && !bookingError && (
-                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex flex-col items-center animate-fade-in">
-                  <div className="flex items-center gap-2 mb-2">
-                    <svg className="w-7 h-7 text-green-500 animate-bounce-in" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                    <span className="text-lg font-bold text-green-700">Booking Confirmed!</span>
-                  </div>
-                  <div className="text-green-900 text-sm text-center">
-                    Your appointment is booked for <br />
-                    <span className="font-semibold">{bookingResult.time ? new Date(bookingResult.time).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : ''}</span>
-                  </div>
-                </div>
-              )}
-              {bookingError && (
-                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex flex-col items-center animate-fade-in">
-                  <div className="flex items-center gap-2 mb-2">
-                    <svg className="w-7 h-7 text-red-500 animate-bounce-in" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    <span className="text-lg font-bold text-red-700">Booking Failed</span>
-                  </div>
-                  <div className="text-red-900 text-sm text-center">
-                    {bookingError}
-                  </div>
-                </div>
-              )}
             </div>
-          )}
+          </div>
+          <div className="flex-1 min-w-[300px] flex flex-col w-full md:flex-[0_0_360px] md:w-[360px]">
+            {selectedDay !== null && (
+              <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-6 w-full flex flex-col h-[540px]">
+                <div className="flex items-center justify-center h-[48px] mb-4">
+                  <span className="text-blue-900 font-semibold text-base flex items-center h-full justify-center">
+                    {selectedDay !== null ? new Date(year, month - 1, selectedDay).toLocaleString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                  </span>
+                </div>
+                <div className="relative flex-1 min-h-0 overflow-y-auto">
+                  {slotsLoading ? (
+                    <div className="absolute inset-0 flex justify-center items-center z-10">
+                      <span className="flex items-center gap-2"><LoadingIndicator /><span>Loading time slots...</span></span>
+                    </div>
+                  ) : slots.length === 0 ? (
+                    <div className="text-blue-900">No slots available</div>
+                  ) : (
+                    slots.map((slot, i) => {
+                      const isSelected = selectedTime && new Date(selectedTime).getTime() === new Date(slot.time).getTime();
+                      return (
+                        <div
+                          key={i}
+                          className={[
+                            'flex items-center p-3 rounded-lg mb-2 cursor-pointer transition-colors',
+                            [
+                              slot.openings > 0
+                                ? 'bg-white border border-gray-300 hover:bg-gray-100 transition-colors'
+                                : 'bg-gray-50 border border-gray-200',
+                              slot.openings === 0 ? 'opacity-60 pointer-events-none' : '',
+                              isSelected ? '!bg-blue-200 !border-blue-400 !text-blue-900' : '',
+                            ].filter(Boolean).join(' '),
+                          ].join(' ')}
+                          onClick={() => slot.openings > 0 && setSelectedTime(slot.time)}
+                        >
+                          <div className="flex-1">
+                            <div className="font-bold">{new Date(slot.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+                            <div className="text-xs text-blue-900">{slot.openings} opening{slot.openings !== 1 ? 's' : ''}</div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                {selectedTime && (
+                  <div className="mt-4 p-4 bg-white border-2 border-blue-300 rounded-xl flex items-center gap-4 shadow-sm">
+                    <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
+                      <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <span className="text-sm font-semibold text-blue-900">
+                        {new Date(selectedTime).toLocaleDateString('en-US')}
+                      </span>
+                      <span className="text-xs text-blue-900 mt-0.5">
+                        {new Date(selectedTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div>
+                      <Button variant="primary" onClick={handleBook} disabled={bookingLoading}>
+                        {bookingLoading ? (
+                          <span className="flex items-center gap-2"><LoadingIndicator /><span>Booking...</span></span>
+                        ) : <span>Book</span>}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {bookingResult && !bookingError && (
+                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex flex-col items-center animate-fade-in">
+                    <div className="flex items-center gap-2 mb-2">
+                      <svg className="w-7 h-7 text-green-500 animate-bounce-in" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      <span className="text-lg font-bold text-green-700">Booking Confirmed!</span>
+                    </div>
+                    <div className="text-green-900 text-sm text-center">
+                      Your appointment is booked for <br />
+                      <span className="font-semibold">{bookingResult.time ? new Date(bookingResult.time).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : ''}</span>
+                    </div>
+                  </div>
+                )}
+                {bookingError && (
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex flex-col items-center animate-fade-in">
+                    <div className="flex items-center gap-2 mb-2">
+                      <svg className="w-7 h-7 text-red-500 animate-bounce-in" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      <span className="text-lg font-bold text-red-700">Booking Failed</span>
+                    </div>
+                    <div className="text-red-900 text-sm text-center">
+                      {bookingError}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </VCenter>
   );
 }

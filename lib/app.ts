@@ -196,26 +196,31 @@ export async function getBookings(userId: string, after: string | undefined, lim
     const bookings = await prisma.booking.findMany({
         where: { userId },
         orderBy: { time: 'asc' },
-        ...after ? { 
+        ...after ? {
             cursor: { id: after },
             skip: 1,
         } : {},
-        take: limit,
+        take: limit + 1,
     });
-    return bookings;
+    const hasMore = bookings.length > limit;
+    const slicedBookings = hasMore ? bookings.slice(0, limit) : bookings;
+    return [slicedBookings, hasMore];
 }
 
-export async function cancelBooking(bookingId: string, userId: string) {
+export async function cancelBooking(userId: string, bookingId: string) {
     return prisma.$transaction(async (tx) => {
-        const booking = await tx.booking.findUnique({
-            where: { id: bookingId }
+        const bookings = await tx.booking.updateManyAndReturn({
+            where: {
+                id: bookingId,
+                userId: userId,
+                status: 'CONFIRMED'
+            },
+            data: { status: 'CANCELLED' }
         });
-        if (!booking || booking.userId !== userId) {
+        if (!bookings || bookings.length === 0) {
             throw new AppErrors.BookingNotFoundError();
         }
-        await tx.booking.delete({
-            where: { id: bookingId }
-        });
+        const booking = bookings[0]!;
         const timeSlot = await tx.timeSlot.findUnique({
             where: { time: booking.time }
         });
@@ -226,6 +231,6 @@ export async function cancelBooking(bookingId: string, userId: string) {
                     openings: timeSlot.openings + 1
                 }
             });
-        }   
+        }
     });
 }
