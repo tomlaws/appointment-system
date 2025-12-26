@@ -1,14 +1,19 @@
-import type { Metadata } from "next";
 import "@/app/globals.css";
+import { auth, getServerSession } from "@/lib/auth";
+import { notFound } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Admin Dashboard",
-  description: "Admin dashboard for managing the appointment system.",
-};
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+   const session = await getServerSession();
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  // Check if user is logged in and has the admin role
+  if (!session?.user || session.user.role !== "admin") {
+    return notFound();
+  }
   return (
     <html lang="en">
+      <head>
+        <title>Admin Dashboard - Appointment System</title>
+      </head>
       <body className="antialiased bg-gray-50 min-h-screen font-sans">
         {/* Top Navbar */}
         <nav className="bg-blue-900 text-white px-6 py-4 flex items-center shadow">

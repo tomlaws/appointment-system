@@ -4,7 +4,7 @@ import { AppError } from '../../../lib/error';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { createBooking, getCalendar, getTimeSlotsForDate, cancelBooking, getBookings } from '../../../lib/app';
-import { auth, authMiddleware, setupHonoAuth } from '../../../lib/auth';
+import { adminAuthMiddleware, auth, authMiddleware, setupHonoAuth } from '../../../lib/auth';
 import { adminApp } from '@/lib/admin-app';
 
 const app = new Hono<{
@@ -113,7 +113,7 @@ app.get(
     });
 
 // Admin routes
-app.use('/admin/*', authMiddleware);
+app.use('/admin/*', adminAuthMiddleware);
 
 app.get('/admin/bookings',
     zValidator('query', z.object({
