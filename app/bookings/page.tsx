@@ -49,8 +49,8 @@ function BookingItem({ booking, onCancelled, filter }: BookingItemProps) {
           {new Date(booking.time).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
         </span>
         <span className={`w-fit inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase border ${booking.status === 'CONFIRMED'
-            ? 'bg-green-100 text-green-700 border-green-300'
-            : 'bg-gray-100 text-gray-700 border-gray-300'
+          ? 'bg-green-100 text-green-700 border-green-300'
+          : 'bg-gray-100 text-gray-700 border-gray-300'
           }`}>
           {booking.status}
         </span>
@@ -126,14 +126,26 @@ export default function BookingsPage() {
       <h1 className="text-2xl font-bold mb-4 text-blue-900 flex items-center gap-2"><Calendar size={24} /> My Bookings</h1>
       <div className="flex gap-2 mb-4">
         <button
-          onClick={() => { setBookings([]); setHasMore(true); setFilter('future'); }}
+          onClick={() => {
+            if (filter !== 'future') {
+              setBookings([]);
+              setHasMore(true);
+              setFilter('future');
+            }
+          }}
           className={`px-4 py-2 rounded-lg font-semibold transition ${filter === 'future' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
         >
           Future Bookings
         </button>
         <button
-          onClick={() => { setBookings([]); setHasMore(true); setFilter('past'); }}
+          onClick={() => {
+            if (filter !== 'past') {
+              setBookings([]);
+              setHasMore(true);
+              setFilter('past');
+            }
+          }}
           className={`px-4 py-2 rounded-lg font-semibold transition ${filter === 'past' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
         >
