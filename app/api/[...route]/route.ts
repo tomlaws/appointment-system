@@ -94,7 +94,7 @@ app.delete(
 app.get(
     '/bookings',
     zValidator('query', z.object({
-        after: z.string().uuid().optional(),
+        after: z.uuid().optional(),
     })),
     authMiddleware,
     async (c) => {

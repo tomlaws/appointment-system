@@ -137,6 +137,7 @@ export const BookingScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   time: 'time',
+  status: 'status',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

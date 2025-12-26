@@ -14,7 +14,7 @@ export default function Navbar() {
     <nav className="w-full border-b border-blue-50 bg-white/50 backdrop-blur-sm">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="text-blue-700 font-bold">Appointment System</div>
+          <Link href="/" className="text-blue-700 font-bold">Appointment System</Link>
         </div>
         <div className="flex items-center gap-3">
           {!isPending && !session?.user && (
@@ -24,7 +24,7 @@ export default function Navbar() {
           )}
           {!isPending && session?.user && (
             <div className="flex items-center gap-3">
-              <span className="text-blue-700">{session.user.email}</span>
+              <Link href="/bookings" className="text-blue-700 hover:underline">My Bookings</Link>
             </div>
           )}
             {!isPending && session?.user && (

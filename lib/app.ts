@@ -107,74 +107,24 @@ async function validateSlotTime(time: Date) {
     return false;
 }
 
-// export async function generateAndSendOneTimeCode(email: string) {
-//     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-//     const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
-//     await prisma.oneTimeCode.create({
-//         data: {
-//             email,
-//             code,
-//             expiry
-//         }
-//     });
-//     await sendEmail(email, 'Your One-Time Code', `Your one-time code is: ${code}`);
-// }
-
-// export async function getEmailByOneTimeCode(code: string) {
-//     const otc = await prisma.oneTimeCode.updateManyAndReturn({
-//         where: {
-//             code,
-//             used: false,
-//             expiry: { gt: new Date() }
-//         },
-//         data: {
-//             used: true
-//         }
-//     });
-//     if (otc === null || otc.length === 0) {
-//         throw new AppErrors.InvalidOneTimeCodeError();
-//     }
-//     return otc[0]?.email;
-// }
-
-// export async function getUserByEmail(email: string, firstName: string, lastName: string) {
-//     let user = await prisma.user.findUnique({
-//         where: { email },
-//     });
-//     if (!user) {
-//         user = await prisma.user.create({
-//             data: {
-//                 email,
-//                 firstName: firstName,
-//                 lastName: lastName,
-//                 status: UserStatus.ANONYMOUS
-//             }
-//         });
-//         return user;
-//     } else {
-//         return user;
-//     }
-// }
-
 export async function createBooking(userId: string, time: Date) {
     const isValidTime = await validateSlotTime(time);
     if (!isValidTime) {
         throw new AppErrors.InvalidTimeSlotError();
     }
     console.log(`Creating booking for user ${userId} at time ${time.toISOString()}`);
-    // Check if user already has a booking at the same time
-    const existingBooking = await prisma.booking.findUnique({
-        where: {
-            userId_time: {
-                userId,
-                time
-            }
-        }
-    });
-    if (existingBooking) {
-        throw new AppErrors.AlreadyBookedError();
-    }
     return prisma.$transaction(async (tx) => {
+        // Optimistic locking: check for existing confirmed booking for this user and time
+        const existing = await tx.booking.findFirst({
+            where: {
+                userId: userId,
+                time: time,
+                status: 'CONFIRMED',
+            },
+        });
+        if (existing) {
+            throw new AppErrors.AlreadyBookedError();
+        }
         const timeSlot = await tx.timeSlot.findUnique({
             where: { time: time },
         });
@@ -189,9 +139,21 @@ export async function createBooking(userId: string, time: Date) {
             const booking = await tx.booking.create({
                 data: {
                     userId,
-                    time
+                    time,
+                    status: 'CONFIRMED',
                 }
             });
+            // Double-check for race condition (optimistic lock):
+            const conflict = await tx.booking.findMany({
+                where: {
+                    userId: userId,
+                    time: time,
+                    status: 'CONFIRMED',
+                },
+            });
+            if (conflict.length > 1) {
+                throw new AppErrors.AlreadyBookedError();
+            }
             return booking;
         } else {
             // Update existing timeslot
@@ -210,9 +172,21 @@ export async function createBooking(userId: string, time: Date) {
             const booking = await tx.booking.create({
                 data: {
                     userId,
-                    time
+                    time,
+                    status: 'CONFIRMED',
                 }
             });
+            // Double-check for race condition (optimistic lock):
+            const conflict = await tx.booking.findMany({
+                where: {
+                    userId: userId,
+                    time: time,
+                    status: 'CONFIRMED',
+                },
+            });
+            if (conflict.length > 1) {
+                throw new AppErrors.AlreadyBookedError();
+            }
             return booking;
         }
     });
