@@ -1,28 +1,42 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import LoadingIndicator from '@/components/ui/LoadingIndicator';
 import type { TimeSlot } from '@/generated/prisma/browser';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 
-function fetchCalendar(year: number, month: number) {
-  return fetch(`/api/calendar?year=${year}&month=${month}`).then(res => res.json());
-}
-
-function fetchTimeSlots(year: number, month: number, day: number) {
-  return fetch(`/api/admin/timeslots?year=${year}&month=${month}&day=${day}`).then(res => res.json());
-}
-
-export default function AdminTimeSlotsPage() {
+function TimeSlotsContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const today = new Date();
-  const [year, setYear] = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth() + 1);
+
+  // Initialize state from URL date param or default to today
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const dateParam = searchParams.get('date');
+    if (dateParam) {
+      const parsedDate = new Date(dateParam);
+      return isNaN(parsedDate.getTime()) ? today : parsedDate;
+    }
+    return today;
+  });
+
+  const year = selectedDate.getFullYear();
+  const month = selectedDate.getMonth() + 1; // getMonth() returns 0-11
+  const selectedDay = selectedDate.getDate();
+
   const [calendar, setCalendar] = useState<any | null>(null);
   const [calendarLoading, setCalendarLoading] = useState(true);
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<number>(today.getDate());
-  const [selectedDate, setSelectedDate] = useState<Date>(today);
+
+  const fetchCalendar = (year: number, month: number) => {
+    return fetch(`/api/calendar?year=${year}&month=${month}`).then(res => res.json());
+  };
+
+  const fetchTimeSlots = (year: number, month: number, day: number) => {
+    return fetch(`/api/admin/timeslots?year=${year}&month=${month}&day=${day}`).then(res => res.json());
+  };
 
   // Load calendar for current month
   useEffect(() => {
@@ -43,26 +57,32 @@ export default function AdminTimeSlotsPage() {
   }, [year, month, selectedDay]);
 
   const handleDayClick = (day: number) => {
-    setSelectedDay(day);
-    setSelectedDate(new Date(year, month - 1, day));
+    const newDate = new Date(year, month - 1, day);
+    setSelectedDate(newDate);
+
+    // Update URL with new date
+    const dateString = newDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+    router.replace(`?date=${dateString}`);
   };
 
   const handlePrevMonth = () => {
-    if (month === 1) {
-      setMonth(12);
-      setYear(year - 1);
-    } else {
-      setMonth(month - 1);
-    }
+    const currentDate = new Date(selectedDate);
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    setSelectedDate(currentDate);
+
+    // Update URL with new date
+    const dateString = currentDate.toISOString().split('T')[0];
+    router.replace(`?date=${dateString}`);
   };
 
   const handleNextMonth = () => {
-    if (month === 12) {
-      setMonth(1);
-      setYear(year + 1);
-    } else {
-      setMonth(month + 1);
-    }
+    const currentDate = new Date(selectedDate);
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    setSelectedDate(currentDate);
+
+    // Update URL with new date
+    const dateString = currentDate.toISOString().split('T')[0];
+    router.replace(`?date=${dateString}`);
   };
 
   const monthNames = [
@@ -203,5 +223,31 @@ export default function AdminTimeSlotsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AdminTimeSlotsPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-2xl font-bold mb-6 text-blue-900">Time Slots Management</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-6">
+            <div className="flex justify-center items-center py-8">
+              <LoadingIndicator />
+              <span className="ml-2 text-blue-900">Loading calendar...</span>
+            </div>
+          </div>
+          <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-6">
+            <div className="flex justify-center items-center py-8">
+              <LoadingIndicator />
+              <span className="ml-2 text-blue-900">Loading time slots...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <TimeSlotsContent />
+    </Suspense>
   );
 }

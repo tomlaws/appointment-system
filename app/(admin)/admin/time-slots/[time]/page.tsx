@@ -5,7 +5,7 @@ import Link from 'next/link';
 import LoadingIndicator from '@/components/ui/LoadingIndicator';
 import { Button } from '@/components/ui/Button';
 import type { TimeSlot, Booking } from '@/generated/prisma/browser';
-import router from 'next/router';
+import { useRouter } from 'next/navigation';
 
 type BookingWithUser = Booking & {
   user: {
@@ -25,6 +25,7 @@ export default function AdminTimeSlotDetailPage({
   params: Promise<{ time: string }>;
 }) {
   const resolvedParams = React.use(params);
+  const router = useRouter();
   const [data, setData] = useState<TimeSlotData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

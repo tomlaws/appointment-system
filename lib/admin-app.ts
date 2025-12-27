@@ -93,11 +93,16 @@ async function getBookingsByTimeSlot(time: Date) {
 }
 
 async function updateTimeSlotOpenings(time: Date, openings: number) {
+  const valid = validateSlotTime(time);
+  if (!valid) {
+    throw new Error("Invalid time slot");
+  }
   const updatedTimeSlot = await prisma.timeSlot.upsert({
     where: { time },
     update: { openings },
     create: { time, openings },
   });
+
   return updatedTimeSlot;
 }
 

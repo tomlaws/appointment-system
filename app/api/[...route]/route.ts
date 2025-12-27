@@ -187,7 +187,7 @@ app.patch('/admin/timeslots/:time',
         time: z.coerce.date(),
     })),
     zValidator('json', z.object({
-        openings: z.number().int().min(1),
+        openings: z.number().int().min(0),
     })),
     async (c) => {
         const time = c.req.valid('param').time;
