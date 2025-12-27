@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Booking, User } from "@/generated/prisma/browser";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AdminBookingsPage() {
@@ -11,8 +10,6 @@ export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<(Booking & { user: User })[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [cancellingBookings, setCancellingBookings] = useState<Set<string>>(new Set());
-  const [confirmCancel, setConfirmCancel] = useState<{ open: boolean; bookingId: string | null }>({ open: false, bookingId: null });
   const pageSize = 10;
 
   // Get initial values from URL params
@@ -106,28 +103,6 @@ export default function AdminBookingsPage() {
 
   const totalPages = Math.ceil(total / pageSize);
 
-  const handleCancel = async (bookingId: string) => {
-    setCancellingBookings(prev => new Set(prev).add(bookingId));
-    try {
-      const response = await fetch(`/api/admin/bookings/${bookingId}/cancel`, { method: 'PATCH' });
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        alert(data.message || 'Failed to cancel booking');
-        return;
-      }
-      // Update the booking status to CANCELLED
-      setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'CANCELLED' } : b));
-    } catch (err) {
-      alert('Failed to cancel booking');
-    } finally {
-      setCancellingBookings(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(bookingId);
-        return newSet;
-      });
-    }
-  };
-
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4 text-blue-900">Bookings</h2>
@@ -172,17 +147,16 @@ export default function AdminBookingsPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-blue-900 uppercase">Booking Time</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-blue-900 uppercase">Booked At</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-blue-900 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-blue-900 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center">Loading...</td></tr>
+              <tr><td colSpan={5} className="px-6 py-4 text-center">Loading...</td></tr>
             ) : bookings.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center text-blue-900">No bookings found.</td></tr>
+              <tr><td colSpan={5} className="px-6 py-4 text-center text-blue-900">No bookings found.</td></tr>
             ) : (
               bookings.map(booking => (
-                <tr key={booking.id} className="hover:bg-blue-50 transition">
+                <tr key={booking.id} className="hover:bg-blue-50 transition cursor-pointer" onClick={() => router.push(`/admin/bookings/${booking.id}`)}>
                   <td className="px-6 py-4 whitespace-nowrap font-medium text-blue-900">{booking.user.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-blue-900">{booking.user.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-blue-900">
@@ -201,18 +175,6 @@ export default function AdminBookingsPage() {
                     }`}>
                       {booking.status}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {booking.status === 'CONFIRMED' && (
-                      <button
-                        onClick={() => setConfirmCancel({ open: true, bookingId: booking.id })}
-                        disabled={cancellingBookings.has(booking.id)}
-                        className="px-3 py-1 rounded bg-red-100 text-red-700 font-medium hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm flex items-center gap-1"
-                      >
-                        <X size={14} />
-                        Cancel
-                      </button>
-                    )}
                   </td>
                 </tr>
               ))
@@ -234,21 +196,6 @@ export default function AdminBookingsPage() {
           className="w-10 h-10 rounded-full border border-blue-200 bg-white text-blue-900 font-medium disabled:opacity-50 flex items-center justify-center hover:bg-blue-50 transition"
         ><ChevronRight size={16} /></button>
       </div>
-      <ConfirmDialog
-        open={confirmCancel.open}
-        onOpenChange={(open) => setConfirmCancel({ open, bookingId: open ? confirmCancel.bookingId : null })}
-        title="Cancel Booking"
-        description="Are you sure you want to cancel this booking? This action cannot be undone."
-        confirmText="Yes, Cancel"
-        cancelText="Keep Booking"
-        onConfirm={() => {
-          if (confirmCancel.bookingId) {
-            handleCancel(confirmCancel.bookingId);
-          }
-          setConfirmCancel({ open: false, bookingId: null });
-        }}
-        variant="destructive"
-      />
     </div>
   );
 }

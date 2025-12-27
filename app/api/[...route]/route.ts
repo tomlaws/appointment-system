@@ -136,6 +136,19 @@ app.get('/admin/bookings',
         return c.json(bookings);
     });
 
+app.get('/admin/bookings/:id',
+    zValidator('param', z.object({
+        id: z.uuid(),
+    })),
+    async (c) => {
+        const bookingId = c.req.valid('param').id;
+        const booking = await adminApp.getBooking(bookingId);
+        if (!booking) {
+            return c.json({ error: 'Booking not found' }, 404);
+        }
+        return c.json(booking);
+    });
+
 app.patch('/admin/bookings/:id/cancel',
     zValidator('param', z.object({
         id: z.uuid(),

@@ -101,10 +101,19 @@ async function updateTimeSlotOpenings(time: Date, openings: number) {
   return updatedTimeSlot;
 }
 
+async function getBooking(bookingId: string) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { user: true },
+  });
+  return booking;
+}
+
 export const adminApp = {
   getBookings,
   cancelBooking,
   getTimeSlotAt,
   getBookingsByTimeSlot,
   updateTimeSlotOpenings,
+  getBooking,
 };

@@ -20,6 +20,7 @@ interface ConfirmDialogProps {
   cancelText?: string
   onConfirm: () => void
   variant?: "default" | "destructive"
+  disabled?: boolean
 }
 
 export function ConfirmDialog({
@@ -31,6 +32,7 @@ export function ConfirmDialog({
   cancelText = "Cancel",
   onConfirm,
   variant = "default",
+  disabled = false,
 }: ConfirmDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -43,6 +45,7 @@ export function ConfirmDialog({
           <AlertDialogCancel>{cancelText}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
+            disabled={disabled}
             className={variant === "destructive" ? "bg-red-600 hover:bg-red-700" : ""}
           >
             {confirmText}

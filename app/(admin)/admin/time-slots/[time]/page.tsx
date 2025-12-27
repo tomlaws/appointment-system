@@ -201,9 +201,10 @@ export default function AdminTimeSlotDetailPage({
           ) : (
             <div className="space-y-3">
               {bookings.map((booking) => (
-                <div
+                <Link
                   key={booking.id}
-                  className="p-4 border border-blue-200 rounded-lg bg-blue-50"
+                  href={`/admin/bookings/${booking.id}`}
+                  className="block p-4 border border-blue-200 rounded-lg bg-blue-50 hover:bg-blue-100 transition cursor-pointer"
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -229,7 +230,7 @@ export default function AdminTimeSlotDetailPage({
                   <p className="text-xs text-blue-600 mt-2">
                     Booked on {new Date(booking.createdAt).toLocaleDateString()}
                   </p>
-                </div>
+                </Link>
               ))}
             </div>
           )}
