@@ -1,5 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client";
 import prisma from "./prisma";
+import { validateSlotTime } from "./app";
+import { Config } from "./config";
 
 async function getBookings({
   username,
@@ -63,7 +65,46 @@ async function cancelBooking(bookingId: string) {
   });
 }
 
+async function getTimeSlotAt(time: Date) {
+  const timeSlot = await prisma.timeSlot.findUnique({
+    where: { time },
+  });
+  if (!timeSlot) {
+    const valid = validateSlotTime(time);
+    if (!valid) {
+      throw new Error("Invalid time slot");
+    }
+    // return a default time slot with Config.timeslotCapacity openings
+    return {
+      id: "",
+      time,
+      openings: Config.timeslotCapacity,
+    };
+  }
+  return timeSlot;
+}
+
+async function getBookingsByTimeSlot(time: Date) {
+  const bookings = await prisma.booking.findMany({
+    where: { time: time },
+    include: { user: true },
+  });
+  return bookings;
+}
+
+async function updateTimeSlotOpenings(time: Date, openings: number) {
+  const updatedTimeSlot = await prisma.timeSlot.upsert({
+    where: { time },
+    update: { openings },
+    create: { time, openings },
+  });
+  return updatedTimeSlot;
+}
+
 export const adminApp = {
   getBookings,
   cancelBooking,
+  getTimeSlotAt,
+  getBookingsByTimeSlot,
+  updateTimeSlotOpenings,
 };

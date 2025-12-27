@@ -23,7 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <aside className="w-56 bg-white border-r border-blue-100 py-8 px-4 flex flex-col gap-2">
             <a href="/admin/users" className="block px-4 py-2 rounded-lg text-blue-900 font-medium hover:bg-blue-50 transition">Users</a>
             <a href="/admin/bookings" className="block px-4 py-2 rounded-lg text-blue-900 font-medium hover:bg-blue-50 transition">Bookings</a>
-            <a href="/admin/timeslots" className="block px-4 py-2 rounded-lg text-blue-900 font-medium hover:bg-blue-50 transition">Time Slots</a>
+            <a href="/admin/time-slots" className="block px-4 py-2 rounded-lg text-blue-900 font-medium hover:bg-blue-50 transition">Time Slots</a>
           </aside>
           {/* Main Content */}
           <main className="flex-1 p-8">

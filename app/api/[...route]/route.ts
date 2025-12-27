@@ -158,6 +158,31 @@ app.get('/admin/timeslots',
         return c.json(slots);
     });
 
+app.get('/admin/timeslots/:time',
+    zValidator('param', z.object({
+        time: z.coerce.date(),
+    })),
+    async (c) => {
+        const time = c.req.valid('param').time;
+        const timeslot = await adminApp.getTimeSlotAt(time);
+        const bookings = await adminApp.getBookingsByTimeSlot(time);
+        return c.json({ timeslot, bookings });
+    });
+
+app.patch('/admin/timeslots/:time',
+    zValidator('param', z.object({
+        time: z.coerce.date(),
+    })),
+    zValidator('json', z.object({
+        openings: z.number().int().min(1),
+    })),
+    async (c) => {
+        const time = c.req.valid('param').time;
+        const { openings } = c.req.valid('json');
+        const timeslot = await adminApp.updateTimeSlotOpenings(time, openings);
+        return c.json(timeslot);
+    });
+
 export const GET = handle(app)
 export const POST = handle(app)
 export const PATCH = handle(app)

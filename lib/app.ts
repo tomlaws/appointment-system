@@ -93,7 +93,7 @@ export async function getTimeSlotsForDate(year: number, month: number, day: numb
     return timeSlots;
 }
 
-async function validateSlotTime(time: Date) {
+export function validateSlotTime(time: Date) {
     const hour = time.getHours();
     const minute = time.getMinutes();
     const officeHours = Config.officeHours;
