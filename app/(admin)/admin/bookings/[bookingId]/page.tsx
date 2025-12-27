@@ -94,7 +94,7 @@ export default function AdminBookingDetailPage({
             className="inline-flex items-center mt-2 text-blue-600 hover:text-blue-800"
           >
             <ArrowLeft size={16} className="mr-1" />
-            Back to Bookings
+            Back
           </button>
         </div>
       </div>
@@ -109,7 +109,7 @@ export default function AdminBookingDetailPage({
           className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
         >
           <ArrowLeft size={16} className="mr-1" />
-          Back to Bookings
+          Back
         </button>
         <h1 className="text-3xl font-bold text-blue-900 flex items-center gap-2">
           <Calendar size={24} />
