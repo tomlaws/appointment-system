@@ -5,6 +5,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { useRouter } from "next/navigation";
 import { Calendar, Clock, X } from 'lucide-react';
 import { VCenter } from "@/components/ui/VCenter";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface Booking {
   id: string;
@@ -21,6 +22,7 @@ interface BookingItemProps {
 function BookingItem({ booking, onCancelled, filter }: BookingItemProps) {
   const router = useRouter();
   const [cancelling, setCancelling] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const handleCancel = async () => {
     setCancelling(true);
@@ -40,31 +42,46 @@ function BookingItem({ booking, onCancelled, filter }: BookingItemProps) {
   };
 
   return (
-    <li
-      className="w-full min-h-[90px] p-6 bg-white border border-blue-100 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center gap-4"
-    >
-      <div className="flex-1 flex flex-col gap-1">
-        <span className="font-semibold text-blue-900 text-lg flex items-center gap-2">
-          <Clock size={18} />
-          {new Date(booking.time).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
-        </span>
-        <span className={`w-fit inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase border ${booking.status === 'CONFIRMED'
-          ? 'bg-green-100 text-green-700 border-green-300'
-          : 'bg-gray-100 text-gray-700 border-gray-300'
-          }`}>
-          {booking.status}
-        </span>
-      </div>
-      {booking.status === 'CONFIRMED' && filter !== 'past' && (
-        <button
-          className="px-5 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200 transition disabled:opacity-60 disabled:cursor-not-allowed"
-          onClick={handleCancel}
-          disabled={cancelling}
-        >
-          {cancelling ? 'Cancelling...' : <><X size={16} className="inline mr-1" /> Cancel Booking</>}
-        </button>
-      )}
-    </li>
+    <>
+      <li
+        className="w-full min-h-[90px] p-6 bg-white border border-blue-100 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center gap-4"
+      >
+        <div className="flex-1 flex flex-col gap-1">
+          <span className="font-semibold text-blue-900 text-lg flex items-center gap-2">
+            <Clock size={18} />
+            {new Date(booking.time).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
+          </span>
+          <span className={`w-fit inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase border ${booking.status === 'CONFIRMED'
+            ? 'bg-green-100 text-green-700 border-green-300'
+            : 'bg-gray-100 text-gray-700 border-gray-300'
+            }`}>
+            {booking.status}
+          </span>
+        </div>
+        {booking.status === 'CONFIRMED' && filter !== 'past' && (
+          <button
+            className="px-5 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            onClick={() => setConfirmCancel(true)}
+            disabled={cancelling}
+          >
+            <X size={16} className="inline mr-1" /> Cancel
+          </button>
+        )}
+      </li>
+      <ConfirmDialog
+        open={confirmCancel}
+        onOpenChange={setConfirmCancel}
+        title="Cancel Booking"
+        description="Are you sure you want to cancel this booking? This action cannot be undone."
+        confirmText="Yes, Cancel Booking"
+        cancelText="Keep Booking"
+        onConfirm={() => {
+          handleCancel();
+          setConfirmCancel(false);
+        }}
+        variant="destructive"
+      />
+    </>
   );
 }
 
