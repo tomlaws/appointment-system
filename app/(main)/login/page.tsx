@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { authClient } from "@/lib/auth-client";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,12 +17,10 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/email-otp/send-verification-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, type: "sign-in" }),
+      await authClient.emailOtp.sendVerificationOtp({
+        email,
+        type: "sign-in",
       });
-      if (!res.ok) throw new Error("Failed to send OTP");
       setStep("otp");
     } catch (err: any) {
       setError(err.message || "Failed to send OTP");
@@ -35,12 +34,10 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/sign-in/email-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp }),
+      await authClient.signIn.emailOtp({
+        email,
+        otp,
       });
-      if (!res.ok) throw new Error("Invalid OTP or login failed");
       router.replace("/");
     } catch (err: any) {
       setError(err.message || "Login failed");
