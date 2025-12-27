@@ -3,18 +3,69 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { Booking, User } from "@/generated/prisma/browser";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AdminBookingsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [bookings, setBookings] = useState<(Booking & { user: User })[]>([]);
-  const [search, setSearch] = useState("");
-  const [searchField, setSearchField] = useState<"name" | "email">("name");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [cancellingBookings, setCancellingBookings] = useState<Set<string>>(new Set());
   const [confirmCancel, setConfirmCancel] = useState<{ open: boolean; bookingId: string | null }>({ open: false, bookingId: null });
   const pageSize = 10;
+
+  // Get initial values from URL params
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const search = searchParams.get('search') || '';
+  const searchField = (searchParams.get('searchField') as "name" | "email") || 'name';
+  const statusFilter = searchParams.get('status') || '';
+
+  const updatePage = (newPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (newPage === 1) {
+      params.delete('page');
+    } else {
+      params.set('page', newPage.toString());
+    }
+    router.push(`?${params.toString()}`);
+  };
+
+  const updateFilters = (newSearch?: string, newSearchField?: "name" | "email", newStatusFilter?: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    // Update search
+    if (newSearch !== undefined) {
+      if (newSearch) {
+        params.set('search', newSearch);
+      } else {
+        params.delete('search');
+      }
+    }
+    
+    // Update searchField
+    if (newSearchField !== undefined) {
+      if (newSearchField !== 'name') {
+        params.set('searchField', newSearchField);
+      } else {
+        params.delete('searchField');
+      }
+    }
+    
+    // Update status filter
+    if (newStatusFilter !== undefined) {
+      if (newStatusFilter) {
+        params.set('status', newStatusFilter);
+      } else {
+        params.delete('status');
+      }
+    }
+    
+    // Reset page to 1 when filters change
+    params.delete('page');
+    
+    router.push(`?${params.toString()}`);
+  };
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -83,7 +134,7 @@ export default function AdminBookingsPage() {
       <div className="mb-4 flex items-center gap-2">
         <select
           value={searchField}
-          onChange={e => { setPage(1); setSearchField(e.target.value as "name" | "email"); }}
+          onChange={e => updateFilters(undefined, e.target.value as "name" | "email", undefined)}
           className="border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
         >
           <option value="name">User Name</option>
@@ -93,18 +144,24 @@ export default function AdminBookingsPage() {
           type="text"
           placeholder={`Search by ${searchField === "name" ? "user name" : "user email"}...`}
           value={search}
-          onChange={e => { setPage(1); setSearch(e.target.value); }}
+          onChange={e => updateFilters(e.target.value, undefined, undefined)}
           className="border border-blue-200 rounded-lg px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-200"
         />
         <select
           value={statusFilter}
-          onChange={e => { setPage(1); setStatusFilter(e.target.value); }}
+          onChange={e => updateFilters(undefined, undefined, e.target.value)}
           className="border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
         >
           <option value="">All Statuses</option>
           <option value="CONFIRMED">Confirmed</option>
           <option value="CANCELLED">Cancelled</option>
         </select>
+        <button
+          onClick={() => updateFilters('', 'name', '')}
+          className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+        >
+          Clear Filters
+        </button>
       </div>
       <div className="bg-white border border-blue-100 rounded-2xl shadow-sm overflow-x-auto">
         <table className="min-w-full divide-y divide-blue-100">
@@ -166,13 +223,13 @@ export default function AdminBookingsPage() {
       {/* Pagination */}
       <div className="flex justify-center items-center gap-2 mt-6">
         <button
-          onClick={() => setPage(p => Math.max(1, p - 1))}
+          onClick={() => updatePage(page - 1)}
           disabled={page === 1}
           className="w-10 h-10 rounded-full border border-blue-200 bg-white text-blue-900 font-medium disabled:opacity-50 flex items-center justify-center hover:bg-blue-50 transition"
         ><ChevronLeft size={16} /></button>
         <span className="text-blue-900 mx-4">Page {page} of {totalPages || 1}</span>
         <button
-          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          onClick={() => updatePage(page + 1)}
           disabled={page === totalPages || totalPages === 0}
           className="w-10 h-10 rounded-full border border-blue-200 bg-white text-blue-900 font-medium disabled:opacity-50 flex items-center justify-center hover:bg-blue-50 transition"
         ><ChevronRight size={16} /></button>
