@@ -6,6 +6,7 @@ import { zValidator } from '@hono/zod-validator';
 import { createBooking, getCalendar, getTimeSlotsForDate, cancelBooking, getBookings } from '../../../lib/app';
 import { adminAuthMiddleware, auth, authMiddleware, setupHonoAuth } from '../../../lib/auth';
 import { adminApp } from '@/lib/admin-app';
+import { BookingStatus } from '@/generated/prisma/enums';
 
 const app = new Hono<{
     Variables: {
@@ -119,6 +120,7 @@ app.get('/admin/bookings',
     zValidator('query', z.object({
         username: z.string().optional(),
         email: z.string().optional(),
+        status: z.enum(BookingStatus).optional(),
         limit: z.coerce.number().int().min(1).max(100).default(10),
         offset: z.coerce.number().int().min(0).default(0),
     })),
@@ -126,11 +128,34 @@ app.get('/admin/bookings',
         const { bookings, total } = await adminApp.getBookings({
             username: c.req.valid('query').username,
             email: c.req.valid('query').email,
+            status: c.req.valid('query').status,
             limit: c.req.valid('query').limit,
             offset: c.req.valid('query').offset,
         });
         c.res.headers.set('X-Total-Count', total.toString());
         return c.json(bookings);
+    });
+
+app.patch('/admin/bookings/:id/cancel',
+    zValidator('param', z.object({
+        id: z.uuid(),
+    })),
+    async (c) => {
+        const bookingId = c.req.valid('param').id;
+        await adminApp.cancelBooking(bookingId);
+        return c.json({ message: 'Booking cancelled' });
+    });
+
+app.get('/admin/timeslots',
+    zValidator('query', z.object({
+        year: z.coerce.number().int().min(1970).max(2100),
+        month: z.coerce.number().int().min(1).max(12),
+        day: z.coerce.number().int().min(1).max(31),
+    })),
+    async (c) => {
+        const { year, month, day } = c.req.valid('query');
+        const slots = await getTimeSlotsForDate(year, month, day);
+        return c.json(slots);
     });
 
 export const GET = handle(app)

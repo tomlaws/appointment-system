@@ -3,8 +3,7 @@ import { auth, getServerSession } from "@/lib/auth";
 import { notFound } from "next/navigation";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-   const session = await getServerSession();
-
+  const session = await getServerSession();
   // Check if user is logged in and has the admin role
   if (!session?.user || session.user.role !== "admin") {
     return notFound();

@@ -4,11 +4,13 @@ import prisma from "./prisma";
 async function getBookings({
   username,
   email,
+  status,
   limit,
   offset
 }: {
-  username: string | undefined;
-  email: string | undefined;
+  username?: string | undefined;
+  email?: string | undefined;
+  status?: "CONFIRMED" | "CANCELLED" | undefined;
   limit: number;
   offset: number;
 }) {
@@ -32,7 +34,8 @@ async function getBookings({
 
   const bookings = await prisma.booking.findMany({
     where: {
-      ...userFilters.length > 0 ? { user: { OR: userFilters } } : {}
+      ...userFilters.length > 0 ? { user: { OR: userFilters } } : {},
+      ...(status ? { status } : {}),
     },
     include: {
       user: true,
@@ -45,13 +48,22 @@ async function getBookings({
   });
   const total = await prisma.booking.count({
     where: {
-      ...userFilters.length > 0 ? { user: { OR: userFilters } } : {}
+      ...userFilters.length > 0 ? { user: { OR: userFilters } } : {},
+      ...(status ? { status } : {}),
     },
   });
 
   return { bookings, total };
 }
 
+async function cancelBooking(bookingId: string) {
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status: "CANCELLED" },
+  });
+}
+
 export const adminApp = {
   getBookings,
+  cancelBooking,
 };

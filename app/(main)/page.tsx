@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
-import Button from '../../components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import LoadingIndicator from '../../components/ui/LoadingIndicator';
 import type { TimeSlot } from '../../generated/prisma/browser';
 import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
@@ -56,13 +56,13 @@ export default function AppointmentSystem() {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    
+
     // Create new abort controller
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
-    
+
     setCalendarLoading(true);
-    
+
     fetchCalendar(year, month, signal)
       .then((data) => {
         // Only update if this response is for the current year/month
@@ -81,7 +81,7 @@ export default function AppointmentSystem() {
           setCalendarLoading(false);
         }
       });
-      
+
     // Cleanup function to abort on unmount or dependency change
     return () => {
       if (abortControllerRef.current) {
@@ -337,7 +337,7 @@ export default function AppointmentSystem() {
                       </span>
                     </div>
                     <div>
-                      <Button variant="primary" onClick={handleBook} disabled={bookingLoading}>
+                      <Button onClick={handleBook} disabled={bookingLoading}>
                         {bookingLoading && (
                           <span className="pr-2"><LoadingIndicator size="sm" /></span>
                         )}

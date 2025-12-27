@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Button from "../../components/ui/Button";
+import { Button } from "@/components/ui/Button";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -67,7 +67,7 @@ export default function LoginPage() {
               />
             </div>
             {error && <div className="text-red-500 text-sm">{error}</div>}
-            <Button type="submit" variant="primary" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Sending..." : "Send OTP"}
             </Button>
           </form>
@@ -89,7 +89,7 @@ export default function LoginPage() {
               />
             </div>
             {error && <div className="text-red-500 text-sm">{error}</div>}
-            <Button type="submit" variant="primary" className="w-full" disabled={loading || otp.length !== 6}>
+            <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
               {loading ? "Verifying..." : "Verify & Login"}
             </Button>
           </form>
