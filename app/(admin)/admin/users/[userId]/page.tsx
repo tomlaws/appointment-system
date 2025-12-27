@@ -140,7 +140,7 @@ export default function AdminUserEditPage() {
     return (
       <div className="text-center py-12">
         <p className="text-red-600 mb-4">{error}</p>
-        <Button onClick={() => router.push("/admin/users")}>Back to Users</Button>
+        <Button onClick={() => router.push("/admin/users")}>Back</Button>
       </div>
     );
   }
@@ -149,7 +149,7 @@ export default function AdminUserEditPage() {
     return (
       <div className="text-center py-12">
         <p className="text-blue-900 mb-4">User not found</p>
-        <Button onClick={() => router.push("/admin/users")}>Back to Users</Button>
+        <Button onClick={() => router.push("/admin/users")}>Back</Button>
       </div>
     );
   }
