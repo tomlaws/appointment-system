@@ -1,6 +1,6 @@
 
-import { betterAuth } from "better-auth";
-import { admin, emailOTP } from "better-auth/plugins"
+import { APIError, betterAuth } from "better-auth";
+import { admin, createAuthMiddleware, emailOTP } from "better-auth/plugins"
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import prisma from './prisma';
 import { sendEmail } from "./resend";
@@ -32,7 +32,22 @@ export const auth = betterAuth({
                 }
             },
         })
-    ]
+    ],
+    hooks: {
+        before: createAuthMiddleware(async (ctx) => {
+            if (ctx.path == "/admin/set-user-password") {
+                const userId = ctx.body?.userId;
+                const internalAdapter = (await auth.$context).internalAdapter;
+                const rootUser = await internalAdapter.findUserByEmail(process.env.ROOT_ACCOUNT!);
+                if (rootUser?.user.id == userId) {
+                    throw new APIError("FORBIDDEN", {
+                        message: "Cannot change password for root admin user",
+                    });
+                }
+                return;
+            }
+        }),
+    }
 });
 
 export function setupHonoAuth(app: Hono<{

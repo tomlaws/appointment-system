@@ -1,7 +1,8 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function ErrorPage() {
+function ErrorContent() {
   const router = useRouter();
   const params = useSearchParams();
   const message = params.get("message") || "An unexpected error occurred.";
@@ -19,5 +20,20 @@ export default function ErrorPage() {
         Go Back
       </button>
     </div>
+  );
+}
+
+export default function ErrorPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-lg mx-auto p-8 flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg w-[500px] max-w-full text-center mb-6">
+          <h1 className="text-2xl font-bold mb-2">Error</h1>
+          <p className="mb-4">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ErrorContent />
+    </Suspense>
   );
 }

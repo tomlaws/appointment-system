@@ -173,7 +173,13 @@ export default function AdminUserEditPage() {
     return (
       <div className="text-center py-12">
         <p className="text-red-600 mb-4">{error}</p>
-        <Button onClick={() => router.push("/admin/users")} className="hover:bg-gray-200 hover:border-gray-300 transition-colors">Back</Button>
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-2 rounded-md transition-colors border border-slate-300 cursor-pointer mb-4"
+        >
+          <ArrowLeft size={16} className="mr-1" />
+          Back
+        </button>
       </div>
     );
   }
@@ -182,7 +188,13 @@ export default function AdminUserEditPage() {
     return (
       <div className="text-center py-12">
         <p className="text-blue-900 mb-4">User not found</p>
-        <Button onClick={() => router.push("/admin/users")} className="hover:bg-gray-200 hover:border-gray-300 transition-colors">Back</Button>
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-2 rounded-md transition-colors border border-slate-300 cursor-pointer mb-4"
+        >
+          <ArrowLeft size={16} className="mr-1" />
+          Back
+        </button>
       </div>
     );
   }
@@ -190,14 +202,14 @@ export default function AdminUserEditPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <Link
-          href="/admin/users"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-2 rounded-md transition-colors mb-4"
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-2 rounded-md transition-colors border border-slate-300 cursor-pointer mb-4"
         >
           <ArrowLeft size={16} className="mr-1" />
           Back
-        </Link>
-        <h1 className="text-3xl font-bold text-blue-900">Edit User</h1>
+        </button>
+        <h1 className="text-2xl font-bold text-blue-900">Edit User</h1>
         <p className="text-blue-700 mt-2">{user.email}</p>
       </div>
 
@@ -254,7 +266,6 @@ export default function AdminUserEditPage() {
               className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
               placeholder="Leave empty to keep current password"
             />
-            <p className="text-xs text-blue-600 mt-1">Leave empty to keep the current password unchanged</p>
           </div>
 
           {error && (
@@ -271,16 +282,18 @@ export default function AdminUserEditPage() {
             >
               Cancel
             </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => setConfirmDelete(true)}
-              className="flex-1 hover:bg-red-700 hover:shadow-md transition-all"
-              disabled={saving || deleting}
-            >
-              {deleting && <LoadingIndicator size="sm" className="mr-2" />}
-              Delete User
-            </Button>
+            {!isRoot && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setConfirmDelete(true)}
+                className="flex-1 hover:bg-red-700 hover:shadow-md transition-all"
+                disabled={saving || deleting}
+              >
+                {deleting && <LoadingIndicator size="sm" className="mr-2" />}
+                Delete User
+              </Button>
+            )}
             <Button
               type="submit"
               className="flex-1"

@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Calendar, Clock, User, Mail, X } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, Mail, X, Hash } from 'lucide-react';
 import LoadingIndicator from '@/components/ui/LoadingIndicator';
 import { Button } from '@/components/ui/Button';
 import type { Booking } from '@/generated/prisma/browser';
@@ -106,18 +106,14 @@ export default function AdminBookingDetailPage({
       <div className="mb-6">
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-2 rounded-md transition-colors mb-4"
+          className="inline-flex items-center bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-2 rounded-md transition-colors border border-slate-300 cursor-pointer mb-4"
         >
           <ArrowLeft size={16} className="mr-1" />
           Back
         </button>
-        <h1 className="text-3xl font-bold text-blue-900 flex items-center gap-2">
-          <Calendar size={24} />
+        <h1 className="text-2xl font-bold text-blue-900">
           Booking Details
         </h1>
-        <p className="text-slate-600 mt-1">
-          Booking ID: {booking.id}
-        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -127,7 +123,16 @@ export default function AdminBookingDetailPage({
 
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <Clock size={20} className="text-blue-600" />
+              <Hash size={20} className="text-blue-700" />
+              <div>
+                <p className="font-medium text-blue-900">Booking ID</p>
+                <p className="text-sm text-slate-600 font-mono">
+                  {booking.id}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Clock size={20} className="text-blue-700" />
               <div>
                 <p className="font-medium text-blue-900">
                   {new Date(booking.time).toLocaleDateString('en-US', {
@@ -148,23 +153,22 @@ export default function AdminBookingDetailPage({
             </div>
 
             <div className="flex items-center gap-3">
-              <Calendar size={20} className="text-blue-600" />
+              <Calendar size={20} className="text-blue-700" />
               <div>
                 <p className="font-medium text-blue-900">Status</p>
-                <span className={`inline-block px-3 py-1 text-sm rounded-full ${
-                  booking.status === 'CONFIRMED'
+                <span className={`inline-block px-3 py-1 text-sm rounded-full ${booking.status === 'CONFIRMED'
                     ? 'bg-green-100 text-green-800'
                     : booking.status === 'CANCELLED'
-                    ? 'bg-red-100 text-red-800'
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
                   {booking.status}
                 </span>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <Clock size={20} className="text-blue-600" />
+              <Clock size={20} className="text-blue-700" />
               <div>
                 <p className="font-medium text-blue-900">Booked on</p>
                 <p className="text-sm text-slate-600">
@@ -205,7 +209,7 @@ export default function AdminBookingDetailPage({
 
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <User size={20} className="text-blue-600" />
+              <User size={20} className="text-blue-700" />
               <div>
                 <p className="font-medium text-blue-900">Name</p>
                 <p className="text-sm text-slate-600">
@@ -215,7 +219,7 @@ export default function AdminBookingDetailPage({
             </div>
 
             <div className="flex items-center gap-3">
-              <Mail size={20} className="text-blue-600" />
+              <Mail size={20} className="text-blue-700" />
               <div>
                 <p className="font-medium text-blue-900">Email</p>
                 <p className="text-sm text-slate-600">

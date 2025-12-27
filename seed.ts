@@ -28,7 +28,8 @@ async function seed() {
     console.log(`Root admin account created with email: ${rootEmail}`);
   } else {
     console.log(`Root admin account with email: ${rootEmail} already exists.`);
-    return;
+    // Update password in case it has changed
+    await internalAdapter.updatePassword(result.user.id, await context.password.hash(rootPassword));
   }
 }
 

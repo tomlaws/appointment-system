@@ -5,6 +5,7 @@ import Link from 'next/link';
 import LoadingIndicator from '@/components/ui/LoadingIndicator';
 import { Button } from '@/components/ui/Button';
 import type { TimeSlot, Booking } from '@/generated/prisma/browser';
+import router from 'next/router';
 
 type BookingWithUser = Booking & {
   user: {
@@ -97,7 +98,7 @@ export default function AdminTimeSlotDetailPage({
           <p className="text-red-800">{error || 'Time slot not found'}</p>
           <Link
             href="/admin/time-slots"
-            className="inline-flex items-center mt-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-2 rounded-md transition-colors"
+            className="inline-flex items-center mt-2 bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-2 rounded-md transition-colors border border-slate-300 cursor-pointer"
           >
             <ArrowLeft size={16} className="mr-1" />
             Back
@@ -112,15 +113,14 @@ export default function AdminTimeSlotDetailPage({
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
-        <Link
-          href="/admin/time-slots"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-2 rounded-md transition-colors mb-4"
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-2 rounded-md transition-colors border border-slate-300 cursor-pointer mb-4"
         >
           <ArrowLeft size={16} className="mr-1" />
           Back
-        </Link>
-        <h1 className="text-3xl font-bold text-blue-900 flex items-center gap-2">
-          <Clock size={24} />
+        </button>
+        <h1 className="text-2xl font-bold text-blue-900">
           Time Slot Details
         </h1>
         <p className="text-blue-700 mt-1">
