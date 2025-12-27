@@ -1,6 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/Button";
 import LoadingIndicator from "@/components/ui/LoadingIndicator";
@@ -17,11 +19,24 @@ export default function AdminUserEditPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    role: "user" as "user" | "admin",
-  });
+  const [password, setPassword] = useState("");
+  const [nameChange, setNameChange] = useState("");
+  const [roleChange, setRoleChange] = useState<"user" | "admin">("user");
+  const [isRoot, setIsRoot] = useState(false);
   const [error, setError] = useState("");
+
+  const formData = useMemo(() => {
+    if (!user) {
+      return {
+        name: "",
+        role: "user" as "user" | "admin",
+      };
+    }
+    return {
+      name: user.name || "",
+      role: (user.role === "admin" ? "admin" : "user") as "user" | "admin",
+    };
+  }, [user]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -42,10 +57,9 @@ export default function AdminUserEditPage() {
         const user = data as UserWithRole | null;
         if (user) {
           setUser(user);
-          setFormData({
-            name: user.name || "",
-            role: (user.role === "admin" ? "admin" : "user"),
-          });
+          setNameChange(user.name || "");
+          setRoleChange((user.role === "admin" ? "admin" : "user"));
+          setIsRoot(user.name === "Root");
         } else {
           setError("User not found");
         }
@@ -65,15 +79,21 @@ export default function AdminUserEditPage() {
     e.preventDefault();
     if (!user) return;
 
+    // Prevent setting name to "Root" (except for the Root user themselves)
+    if (nameChange.trim() === "Root" && !isRoot) {
+      setError("The name 'Root' is reserved and cannot be used.");
+      return;
+    }
+
     setSaving(true);
     setError("");
 
     try {
       // Update user name
-      if (formData.name !== user.name) {
+      if (nameChange !== (user.name || "")) {
         const { error: updateError } = await authClient.admin.updateUser({
           userId: user.id,
-          data: { name: formData.name },
+          data: { name: nameChange },
         });
         if (updateError) {
           setError(updateError.message ?? "Failed to update user");
@@ -82,13 +102,26 @@ export default function AdminUserEditPage() {
       }
 
       // Update user role
-      if (formData.role !== user.role) {
+      if (roleChange !== (user.role === "admin" ? "admin" : "user")) {
         const { error: roleError } = await authClient.admin.setRole({
           userId: user.id,
-          role: formData.role,
+          role: roleChange,
         });
         if (roleError) {
           setError(roleError.message ?? "Failed to update user role");
+          return;
+        }
+      }
+
+      // Update user password if provided
+      if (password.trim()) {
+        const { error: passwordError, data } = await authClient.admin.setUserPassword({
+          userId: user.id,
+          newPassword: password,
+        });
+        console.log(data)
+        if (passwordError) {
+          setError(passwordError.message ?? "Failed to update user password");
           return;
         }
       }
@@ -157,13 +190,13 @@ export default function AdminUserEditPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <Button
-          variant="secondary"
-          onClick={() => router.push("/admin/users")}
-          className="mb-4"
+        <Link
+          href="/admin/users"
+          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
         >
-          ← Back to Users
-        </Button>
+          <ArrowLeft size={16} className="mr-1" />
+          Back
+        </Link>
         <h1 className="text-3xl font-bold text-blue-900">Edit User</h1>
         <p className="text-blue-700 mt-2">{user.email}</p>
       </div>
@@ -171,32 +204,57 @@ export default function AdminUserEditPage() {
       <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-blue-900 mb-2">
+            <label htmlFor="name" className={`block text-sm font-medium mb-2 ${
+              isRoot ? "text-gray-500" : "text-blue-900"
+            }`}>
               Name
             </label>
             <input
               id="name"
               type="text"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
+              value={nameChange}
+              onChange={(e) => setNameChange(e.target.value)}
+              className={`w-full px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 ${
+                isRoot ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""
+              }`}
               required
+              disabled={isRoot}
             />
           </div>
 
           <div>
-            <label htmlFor="role" className="block text-sm font-medium text-blue-900 mb-2">
+            <label htmlFor="role" className={`block text-sm font-medium mb-2 ${
+              isRoot ? "text-gray-500" : "text-blue-900"
+            }`}>
               Role
             </label>
             <select
               id="role"
-              value={formData.role}
-              onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as "user" | "admin" }))}
-              className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
+              value={roleChange}
+              onChange={(e) => setRoleChange(e.target.value as "user" | "admin")}
+              className={`w-full px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 ${
+                isRoot ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""
+              }`}
+              disabled={isRoot}
             >
               <option value="user">User</option>
               <option value="admin">Admin</option>
             </select>
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-blue-900 mb-2">
+              New Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
+              placeholder="Leave empty to keep current password"
+            />
+            <p className="text-xs text-blue-600 mt-1">Leave empty to keep the current password unchanged</p>
           </div>
 
           {error && (
@@ -208,7 +266,7 @@ export default function AdminUserEditPage() {
               type="button"
               variant="secondary"
               onClick={() => router.back()}
-              className="flex-1"
+              className="flex-1 hover:bg-gray-200 hover:border-gray-300 transition-colors"
               disabled={saving || deleting}
             >
               Cancel
@@ -217,7 +275,7 @@ export default function AdminUserEditPage() {
               type="button"
               variant="destructive"
               onClick={() => setConfirmDelete(true)}
-              className="flex-1"
+              className="flex-1 hover:bg-red-700 hover:shadow-md transition-all"
               disabled={saving || deleting}
             >
               {deleting && <LoadingIndicator size="sm" className="mr-2" />}

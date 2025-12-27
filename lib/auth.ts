@@ -5,13 +5,15 @@ import { prismaAdapter } from 'better-auth/adapters/prisma'
 import prisma from './prisma';
 import { sendEmail } from "./resend";
 import type { Hono, MiddlewareHandler } from "hono";
-import { use } from "react";
 import { headers } from "next/headers";
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: 'postgresql',
     }),
+    emailAndPassword: {
+        enabled: true,
+    },
     plugins: [
         admin(),
         emailOTP({
