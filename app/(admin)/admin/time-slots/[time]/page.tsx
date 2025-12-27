@@ -97,7 +97,7 @@ export default function AdminTimeSlotDetailPage({
           <p className="text-red-800">{error || 'Time slot not found'}</p>
           <Link
             href="/admin/time-slots"
-            className="inline-flex items-center mt-2 text-blue-600 hover:text-blue-800"
+            className="inline-flex items-center mt-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-2 rounded-md transition-colors"
           >
             <ArrowLeft size={16} className="mr-1" />
             Back
@@ -110,11 +110,11 @@ export default function AdminTimeSlotDetailPage({
   const { timeslot, bookings } = data;
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto">
       <div className="mb-6">
         <Link
           href="/admin/time-slots"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+          className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-2 rounded-md transition-colors mb-4"
         >
           <ArrowLeft size={16} className="mr-1" />
           Back

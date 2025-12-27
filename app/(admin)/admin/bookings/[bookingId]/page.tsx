@@ -75,7 +75,7 @@ export default function AdminBookingDetailPage({
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-4">
+      <div className="max-w-4xl mx-auto">
         <div className="flex justify-center items-center py-12">
           <LoadingIndicator />
           <span className="ml-2 text-blue-900">Loading booking details...</span>
@@ -86,12 +86,12 @@ export default function AdminBookingDetailPage({
 
   if (error || !booking) {
     return (
-      <div className="max-w-4xl mx-auto p-4">
+      <div className="max-w-4xl mx-auto">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-800">{error || 'Booking not found'}</p>
           <button
             onClick={() => router.back()}
-            className="inline-flex items-center mt-2 text-blue-600 hover:text-blue-800"
+            className="inline-flex items-center mt-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-2 rounded-md transition-colors"
           >
             <ArrowLeft size={16} className="mr-1" />
             Back
@@ -102,11 +102,11 @@ export default function AdminBookingDetailPage({
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto">
       <div className="mb-6">
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+          className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-2 rounded-md transition-colors mb-4"
         >
           <ArrowLeft size={16} className="mr-1" />
           Back
@@ -115,7 +115,7 @@ export default function AdminBookingDetailPage({
           <Calendar size={24} />
           Booking Details
         </h1>
-        <p className="text-blue-700 mt-1">
+        <p className="text-slate-600 mt-1">
           Booking ID: {booking.id}
         </p>
       </div>
@@ -137,7 +137,7 @@ export default function AdminBookingDetailPage({
                     day: 'numeric',
                   })}
                 </p>
-                <p className="text-sm text-blue-700">
+                <p className="text-sm text-slate-600">
                   {new Date(booking.time).toLocaleTimeString('en-US', {
                     hour: 'numeric',
                     minute: '2-digit',
@@ -167,7 +167,7 @@ export default function AdminBookingDetailPage({
               <Clock size={20} className="text-blue-600" />
               <div>
                 <p className="font-medium text-blue-900">Booked on</p>
-                <p className="text-sm text-blue-700">
+                <p className="text-sm text-slate-600">
                   {new Date(booking.createdAt).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
@@ -208,7 +208,7 @@ export default function AdminBookingDetailPage({
               <User size={20} className="text-blue-600" />
               <div>
                 <p className="font-medium text-blue-900">Name</p>
-                <p className="text-sm text-blue-700">
+                <p className="text-sm text-slate-600">
                   {booking.user?.name || 'Unknown'}
                 </p>
               </div>
@@ -218,7 +218,7 @@ export default function AdminBookingDetailPage({
               <Mail size={20} className="text-blue-600" />
               <div>
                 <p className="font-medium text-blue-900">Email</p>
-                <p className="text-sm text-blue-700">
+                <p className="text-sm text-slate-600">
                   {booking.user?.email}
                 </p>
               </div>

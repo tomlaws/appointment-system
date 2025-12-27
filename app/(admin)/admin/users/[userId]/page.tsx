@@ -173,7 +173,7 @@ export default function AdminUserEditPage() {
     return (
       <div className="text-center py-12">
         <p className="text-red-600 mb-4">{error}</p>
-        <Button onClick={() => router.push("/admin/users")}>Back</Button>
+        <Button onClick={() => router.push("/admin/users")} className="hover:bg-gray-200 hover:border-gray-300 transition-colors">Back</Button>
       </div>
     );
   }
@@ -182,7 +182,7 @@ export default function AdminUserEditPage() {
     return (
       <div className="text-center py-12">
         <p className="text-blue-900 mb-4">User not found</p>
-        <Button onClick={() => router.push("/admin/users")}>Back</Button>
+        <Button onClick={() => router.push("/admin/users")} className="hover:bg-gray-200 hover:border-gray-300 transition-colors">Back</Button>
       </div>
     );
   }
@@ -192,7 +192,7 @@ export default function AdminUserEditPage() {
       <div className="mb-6">
         <Link
           href="/admin/users"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+          className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-2 rounded-md transition-colors mb-4"
         >
           <ArrowLeft size={16} className="mr-1" />
           Back
