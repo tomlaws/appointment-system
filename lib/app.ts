@@ -2,6 +2,7 @@ import { Config } from "./config";
 import { AppErrors } from "./error";
 import prisma from "./prisma";
 import type { Calendar } from "./types";
+import { dayjs } from "./utils";
 
 export async function getCalendar(year: number, month: number): Promise<Calendar> {
     const firstDayOfMonth = new Date(year, month - 1, 1);
@@ -36,19 +37,18 @@ export async function getCalendar(year: number, month: number): Promise<Calendar
             slot.time.getMonth() === firstDayOfMonth.getMonth() &&
             slot.time.getDate() === day
         );
-        const past = date < new Date(new Date().setHours(0, 0, 0, 0));
+        const past = date < dayjs().startOf('day').toDate();
         // Determine if the day is full by checking if it contains all possible slots, and each slot openings <= 0
         let full = true;
         for (const { hour, minute } of slotTimes) {
-            // check if hour + minute has passed
-            if (hour < new Date().getHours() || (hour === new Date().getHours() && minute < new Date().getMinutes())) {
+            // Create the full date/time for this slot
+            const slotDateTime = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute, 0, 0);
+            // Skip past slots
+            if (slotDateTime < new Date()) {
                 continue;
             }
             const slot = slotsForDay.find(s => s.time.getHours() === hour && s.time.getMinutes() === minute);
             if (!slot || slot.openings > 0) {
-                if (slot && slot.openings > 0) {
-                    console.log(`Date ${date.toDateString()} has available slot at ${hour}:${minute < 10 ? '0' + minute : minute}`);
-                }
                 full = false;
                 break;
             }

@@ -72,7 +72,7 @@ A modern, full-stack appointment booking system built with Next.js, TypeScript, 
    ROOT_PASSWORD="secure-password"
    TIMESLOT_DURATION_MINUTES=30
    TIMESLOT_CAPACITY=5
-   TZ="Your/Timezone"
+   TZ=UTC
    NEXT_PUBLIC_TZ="Your/Timezone"
    OFFICE_HOURS="09:00-12:30,14:00-18:00"
    ```
@@ -138,9 +138,8 @@ npm run lint           # Run ESLint
 
 ### Time Zone Settings
 The application supports configurable timezones:
-- Set `TZ` for server-side timezone
 - Set `NEXT_PUBLIC_TZ` for client-side timezone
-- Both should be set to the same IANA timezone identifier (e.g., "America/New_York", "Asia/Hong_Kong")
+- Should be set to the same IANA timezone identifier (e.g., "America/New_York", "Asia/Hong_Kong")
 
 ### Office Hours
 Configure business hours in the `OFFICE_HOURS` environment variable:
