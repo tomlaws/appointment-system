@@ -37,7 +37,7 @@ export async function getCalendar(year: number, month: number): Promise<Calendar
             slot.time.getMonth() === firstDayOfMonth.getMonth() &&
             slot.time.getDate() === day
         );
-        const past = date < dayjs().startOf('day').toDate();
+        const past = date < dayjs().tz().toDate();
         // Determine if the day is full by checking if it contains all possible slots, and each slot openings <= 0
         let full = true;
         for (const { hour, minute } of slotTimes) {
