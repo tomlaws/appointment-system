@@ -253,6 +253,8 @@ export default function AppointmentSystem() {
                               if (!disabled) {
                                 setSelectedDay(dayNum);
                                 setSelectedTime(null);
+                                setBookingResult(null);
+                                setBookingError(null);
                               }
                             }}
                             tabIndex={disabled ? -1 : 0}
