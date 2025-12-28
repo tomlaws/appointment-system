@@ -44,6 +44,7 @@
     "better-auth": "^1.4.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dayjs": "^1.11.19",
     "dotenv": "^17.2.3",
     "hono": "^4.11.2",
     "jsonwebtoken": "^9.0.3",

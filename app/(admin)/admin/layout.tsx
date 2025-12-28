@@ -1,6 +1,6 @@
 import "@/app/globals.css";
 import { getServerSession } from "@/lib/auth";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import AdminSidebar from "@/components/AdminSidebar";
 import AdminNavbar from "@/components/AdminNavbar";
 
@@ -8,7 +8,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await getServerSession();
   // Check if user is logged in and has the admin role
   if (!session?.user || session.user.role !== "admin") {
-    return notFound();
+    // redirect to admin login page
+    return redirect("/admin/login");
   }
   return (
     <html lang="en">

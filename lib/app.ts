@@ -36,16 +36,23 @@ export async function getCalendar(year: number, month: number): Promise<Calendar
             slot.time.getMonth() === firstDayOfMonth.getMonth() &&
             slot.time.getDate() === day
         );
+        const past = date < new Date(new Date().setHours(0, 0, 0, 0));
         // Determine if the day is full by checking if it contains all possible slots, and each slot openings <= 0
         let full = true;
         for (const { hour, minute } of slotTimes) {
+            // check if hour + minute has passed
+            if (hour < new Date().getHours() || (hour === new Date().getHours() && minute < new Date().getMinutes())) {
+                continue;
+            }
             const slot = slotsForDay.find(s => s.time.getHours() === hour && s.time.getMinutes() === minute);
             if (!slot || slot.openings > 0) {
+                if (slot && slot.openings > 0) {
+                    console.log(`Date ${date.toDateString()} has available slot at ${hour}:${minute < 10 ? '0' + minute : minute}`);
+                }
                 full = false;
                 break;
             }
         }
-        const past = date < new Date(new Date().setHours(0, 0, 0, 0));
         calendarDays.push({ date, full, past });
     }
 

@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useRouter } from "next/navigation";
 import { Calendar, Clock, X } from 'lucide-react';
-import { VCenter } from "@/components/ui/VCenter";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { dayjs } from "@/lib/utils";
 
 interface Booking {
   id: string;
@@ -49,7 +49,7 @@ function BookingItem({ booking, onCancelled, filter }: BookingItemProps) {
         <div className="flex-1 flex flex-col gap-1">
           <span className="font-semibold text-blue-900 text-lg flex items-center gap-2">
             <Clock size={18} />
-            {new Date(booking.time).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
+            {dayjs(booking.time).tz().format('dddd, MMMM D, YYYY [at] h:mm A')}
           </span>
           <span className={`w-fit inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase border ${booking.status === 'CONFIRMED'
             ? 'bg-green-100 text-green-700 border-green-300'

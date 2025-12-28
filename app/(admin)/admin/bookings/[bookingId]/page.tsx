@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import type { Booking } from '@/generated/prisma/browser';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useRouter } from 'next/navigation';
+import { dayjs } from '@/lib/utils';
 
 type BookingWithUser = Booking & {
   user: {
@@ -135,19 +136,10 @@ export default function AdminBookingDetailPage({
               <Clock size={20} className="text-blue-700" />
               <div>
                 <p className="font-medium text-blue-900">
-                  {new Date(booking.time).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  {dayjs(booking.time).tz().format('dddd, MMMM D, YYYY')}
                 </p>
                 <p className="text-sm text-slate-600">
-                  {new Date(booking.time).toLocaleTimeString('en-US', {
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true
-                  })}
+                  {dayjs(booking.time).tz().format('h:mm A')}
                 </p>
               </div>
             </div>
@@ -172,14 +164,7 @@ export default function AdminBookingDetailPage({
               <div>
                 <p className="font-medium text-blue-900">Booked on</p>
                 <p className="text-sm text-slate-600">
-                  {new Date(booking.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true
-                  })}
+                  {dayjs(booking.createdAt).tz().format('MMMM D, YYYY [at] h:mm A')}
                 </p>
               </div>
             </div>

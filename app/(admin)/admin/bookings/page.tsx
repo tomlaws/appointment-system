@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Booking, User } from "@/generated/prisma/browser";
 import { useRouter, useSearchParams } from "next/navigation";
+import { dayjs } from "@/lib/utils";
 
 export default function AdminBookingsPage() {
   const router = useRouter();
@@ -160,10 +161,10 @@ export default function AdminBookingsPage() {
                   <td className="px-6 py-4 whitespace-nowrap font-medium text-blue-900">{booking.user.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-blue-900">{booking.user.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-blue-900">
-                    {new Date(booking.time).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
+                    {dayjs(booking.time).tz().format('MMM D, YYYY, h:mm A')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-blue-900">
-                    {new Date(booking.createdAt).toLocaleDateString('en-US')}
+                    {dayjs(booking.createdAt).tz().format('MMM D, YYYY')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold uppercase border ${

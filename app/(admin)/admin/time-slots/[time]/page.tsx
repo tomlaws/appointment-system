@@ -6,6 +6,7 @@ import LoadingIndicator from '@/components/ui/LoadingIndicator';
 import { Button } from '@/components/ui/Button';
 import type { TimeSlot, Booking } from '@/generated/prisma/browser';
 import { useRouter } from 'next/navigation';
+import { dayjs } from '@/lib/utils';
 
 type BookingWithUser = Booking & {
   user: {
@@ -31,8 +32,7 @@ export default function AdminTimeSlotDetailPage({
   const [error, setError] = useState<string | null>(null);
   const [openings, setOpenings] = useState<number>(0);
   const [saving, setSaving] = useState(false);
-
-  const time = new Date(decodeURIComponent(resolvedParams.time));
+  const time = dayjs.utc(decodeURIComponent(resolvedParams.time));
 
   useEffect(() => {
     fetchTimeSlotData();
@@ -125,15 +125,7 @@ export default function AdminTimeSlotDetailPage({
           Time Slot Details
         </h1>
         <p className="text-blue-700 mt-1">
-          {time.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-          })}
+          {time.format('dddd, MMMM D, YYYY [at] h:mm A')}
         </p>
       </div>
 
@@ -229,7 +221,7 @@ export default function AdminTimeSlotDetailPage({
                     </div>
                   </div>
                   <p className="text-xs text-blue-600 mt-2">
-                    Booked on {new Date(booking.createdAt).toLocaleDateString()}
+                    Booked on {dayjs(booking.createdAt).format('MMM D, YYYY')}
                   </p>
                 </Link>
               ))}

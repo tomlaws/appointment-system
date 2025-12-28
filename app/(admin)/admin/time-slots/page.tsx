@@ -5,25 +5,26 @@ import LoadingIndicator from '@/components/ui/LoadingIndicator';
 import type { TimeSlot } from '@/generated/prisma/browser';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { dayjs } from '@/lib/utils';
 
 function TimeSlotsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const today = new Date();
+  const today = dayjs.tz();
 
   // Initialize state from URL date param or default to today
   const [selectedDate, setSelectedDate] = useState(() => {
     const dateParam = searchParams.get('date');
     if (dateParam) {
-      const parsedDate = new Date(dateParam);
-      return isNaN(parsedDate.getTime()) ? today : parsedDate;
+      const parsedDate = dayjs(dateParam);
+      return parsedDate.isValid() ? parsedDate : today;
     }
     return today;
   });
 
-  const year = selectedDate.getFullYear();
-  const month = selectedDate.getMonth() + 1; // getMonth() returns 0-11
-  const selectedDay = selectedDate.getDate();
+  const year = selectedDate.year();
+  const month = selectedDate.month() + 1; // dayjs month() returns 0-11
+  const selectedDay = selectedDate.date();
 
   const [calendar, setCalendar] = useState<any | null>(null);
   const [calendarLoading, setCalendarLoading] = useState(true);
@@ -57,31 +58,29 @@ function TimeSlotsContent() {
   }, [year, month, selectedDay]);
 
   const handleDayClick = (day: number) => {
-    const newDate = new Date(year, month - 1, day);
+    const newDate = selectedDate.date(day);
     setSelectedDate(newDate);
 
     // Update URL with new date
-    const dateString = newDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const dateString = newDate.format('YYYY-MM-DD');
     router.replace(`?date=${dateString}`);
   };
 
   const handlePrevMonth = () => {
-    const currentDate = new Date(selectedDate);
-    currentDate.setMonth(currentDate.getMonth() - 1);
+    const currentDate = selectedDate.subtract(1, 'month');
     setSelectedDate(currentDate);
 
     // Update URL with new date
-    const dateString = currentDate.toISOString().split('T')[0];
+    const dateString = currentDate.format('YYYY-MM-DD');
     router.replace(`?date=${dateString}`);
   };
 
   const handleNextMonth = () => {
-    const currentDate = new Date(selectedDate);
-    currentDate.setMonth(currentDate.getMonth() + 1);
+    const currentDate = selectedDate.add(1, 'month');
     setSelectedDate(currentDate);
 
     // Update URL with new date
-    const dateString = currentDate.toISOString().split('T')[0];
+    const dateString = currentDate.format('YYYY-MM-DD');
     router.replace(`?date=${dateString}`);
   };
 
@@ -91,10 +90,10 @@ function TimeSlotsContent() {
   ];
 
   const isToday = (day: number) => {
-    const today = new Date();
-    return today.getFullYear() === year &&
-           today.getMonth() + 1 === month &&
-           today.getDate() === day;
+    const today = dayjs.tz();
+    return today.year() === year &&
+           today.month() + 1 === month &&
+           today.date() === day;
   };
 
   const isSelected = (day: number) => selectedDay === day;
@@ -140,8 +139,7 @@ function TimeSlotsContent() {
 
               {/* Empty cells for days before the first day of the month */}
               {(() => {
-                const firstDate = new Date(calendar.days[0].date);
-                const firstDayOfWeek = firstDate.getDay(); // 0=Sunday
+                const firstDayOfWeek = dayjs(calendar.days[0].date).tz().day(); // 0=Sunday
                 return Array.from({ length: firstDayOfWeek }, (_, i) => (
                   <div key={`empty-${year}-${month}-${i}`} className="p-2"></div>
                 ));
@@ -149,8 +147,8 @@ function TimeSlotsContent() {
 
               {/* Days of the month */}
               {calendar.days.map((day: any, index: number) => {
-                const dateObj = new Date(day.date);
-                const dayNum = dateObj.getDate();
+                const dateObj = dayjs(day.date).tz();
+                const dayNum = dateObj.date();
                 const isSelected = selectedDay === dayNum;
                 const isFull = Boolean(day.full);
                 const isPast = Boolean(day.past);
@@ -181,12 +179,7 @@ function TimeSlotsContent() {
         <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-6">
           <h3 className="text-lg font-semibold mb-4 text-blue-900 flex items-center gap-2">
             <Clock size={20} />
-            Time Slots for {selectedDate.toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
+            Time Slots for {selectedDate.format('dddd, MMMM D, YYYY')}
           </h3>
 
           {slotsLoading ? (
@@ -203,15 +196,11 @@ function TimeSlotsContent() {
               {slots.map((slot, index) => (
                 <Link
                   key={`slot-${year}-${month}-${selectedDay}-${slot.id}-${index}`}
-                  href={`/admin/time-slots/${encodeURIComponent(new Date(slot.time).toISOString())}`}
+                  href={`/admin/time-slots/${encodeURIComponent(dayjs.utc(slot.time).toISOString())}`}
                   className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center hover:bg-blue-100 transition cursor-pointer block"
                 >
                   <div className="font-medium text-blue-900">
-                    {new Date(slot.time).toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      hour12: true
-                    })}
+                    {dayjs(slot.time).tz().format('h:mm A')}
                   </div>
                   <div className="text-sm text-blue-700 mt-1">
                     {slot.openings > 0 ? `${slot.openings} available` : 'Fully booked'}

@@ -7,6 +7,8 @@ import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
 import { VCenter } from '@/components/ui/VCenter';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
+import type { Dayjs } from 'dayjs';
+import { dayjs } from '@/lib/utils';
 
 function fetchCalendar(year: number, month: number, signal: AbortSignal) {
   return fetch(`/api/calendar?year=${year}&month=${month}`, { signal }).then(res => res.json());
@@ -16,7 +18,7 @@ function fetchTimeSlots(year: number, month: number, day: number) {
   return fetch(`/api/timeslots?year=${year}&month=${month}&day=${day}`).then(res => res.json());
 }
 
-function createBooking(time: Date) {
+function createBooking(time: Dayjs) {
   return fetch('/api/bookings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -28,24 +30,24 @@ function createBooking(time: Date) {
 }
 
 export default function AppointmentSystem() {
-  const today = new Date();
+  const today = dayjs.tz();
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const abortControllerRef = useRef<AbortController | null>(null);
-  const [year, setYear] = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth() + 1);
+  const [year, setYear] = useState(today.year());
+  const [month, setMonth] = useState(today.month() + 1);
   const [calendar, setCalendar] = useState<any | null>(null);
   const [slots, setSlots] = useState<(TimeSlot & { past: boolean })[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(true);
-  const [selectedTime, setSelectedTimeRaw] = useState<Date | null>(null);
-  const setSelectedTime = (time: Date | null) => {
+  const [selectedTime, setSelectedTimeRaw] = useState<Dayjs | null>(null);
+  const setSelectedTime = (time: Dayjs | null) => {
     setSelectedTimeRaw(time);
     if (time !== null) {
       setBookingResult(null);
       setBookingError(null); // Clear error when selecting a timeslot
     }
   };
-  const [selectedDay, setSelectedDay] = useState<number | null>(today.getDate());
+  const [selectedDay, setSelectedDay] = useState<number | null>(today.date());
   const [bookingResult, setBookingResult] = useState<{ time?: string | Date } | null>(null);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -136,8 +138,7 @@ export default function AppointmentSystem() {
   function getCalendarMatrix() {
     if (!calendar) return [];
     const days = calendar.days;
-    const firstDate = new Date(days[0].date);
-    const firstDayOfWeek = firstDate.getDay(); // 0=Sunday
+    const firstDayOfWeek = dayjs(days[0].date).tz().day(); // 0=Sunday
     const matrix = [];
     let week = [];
     // Fill leading blanks
@@ -166,7 +167,7 @@ export default function AppointmentSystem() {
                 <div className="w-12 flex justify-start items-center h-full">
                   <button
                     aria-label="Previous month"
-                    disabled={calendarLoading || (month === today.getMonth() + 1 && year === today.getFullYear())}
+                    disabled={calendarLoading || (month === today.month() + 1 && year === today.year())}
                     onClick={() => {
                       let newMonth, newYear;
                       if (month === 1) {
@@ -178,18 +179,18 @@ export default function AppointmentSystem() {
                       }
                       setMonth(newMonth);
                       setYear(newYear);
-                      if (newMonth === today.getMonth() + 1 && newYear === today.getFullYear()) {
-                        setSelectedDay(today.getDate());
+                      if (newMonth === today.month() + 1 && newYear === today.year()) {
+                        setSelectedDay(today.date());
                       } else {
                         setSelectedDay(1);
                       }
                     }}
-                    className={`border border-blue-100 bg-white p-2 rounded-lg transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 ${month === today.getMonth() + 1 && year === today.getFullYear() ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`border border-blue-100 bg-white p-2 rounded-lg transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 ${month === today.month() + 1 && year === today.year() ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                   ><ChevronLeft size={16} /></button>
                 </div>
                 <div className="flex-1 flex items-center justify-center h-full">
                   <span className="text-center font-bold text-blue-900 text-base">
-                    {new Date(year, month - 1).toLocaleString('en-US', { month: 'long' })} {year}
+                    {dayjs().tz().month(month - 1).format('MMMM')} {year}
                   </span>
                 </div>
                 <div className="w-12 flex justify-end items-center h-full">
@@ -207,8 +208,8 @@ export default function AppointmentSystem() {
                       }
                       setMonth(newMonth);
                       setYear(newYear);
-                      if (newMonth === today.getMonth() + 1 && newYear === today.getFullYear()) {
-                        setSelectedDay(today.getDate());
+                      if (newMonth === today.month() + 1 && newYear === today.year()) {
+                        setSelectedDay(today.date());
                       } else {
                         setSelectedDay(1);
                       }
@@ -232,8 +233,8 @@ export default function AppointmentSystem() {
                   <div key={wIdx} className="flex flex-1 gap-2">
                     {week.map((d, idx) => {
                       if (!d) return <div key={idx} className="flex-1" />;
-                      const dateObj = new Date(d.date);
-                      const dayNum = dateObj.getDate();
+                      const dayDate = dayjs(d.date).tz();
+                      const dayNum = dayDate.date();
                       const isSelected = selectedDay === dayNum;
                       const isFull = Boolean(d.full);
                       const isPast = Boolean(d.past);
@@ -281,7 +282,7 @@ export default function AppointmentSystem() {
                 <div className="flex items-center justify-center h-[48px] mb-4">
                   <span className="text-blue-900 font-semibold text-base flex items-center h-full justify-center">
                     {selectedDay !== null
-                      ? `Timeslots available on ${new Date(year, month - 1, selectedDay).toLocaleString('en-US', { month: 'short', day: 'numeric' })}`
+                      ? `Timeslots available on ${dayjs().tz().year(year).month(month - 1).date(selectedDay).format('MMM D')}`
                       : ''}
                   </span>
                 </div>
@@ -298,7 +299,7 @@ export default function AppointmentSystem() {
                     </div>
                   ) : (
                     slots.filter(slot => !slot.past).map((slot, i) => {
-                      const isSelected = selectedTime && new Date(selectedTime).getTime() === new Date(slot.time).getTime();
+                      const isSelected = selectedTime && dayjs(selectedTime).isSame(slot.time);
                       return (
                         <div
                           key={i}
@@ -312,10 +313,10 @@ export default function AppointmentSystem() {
                               isSelected ? '!bg-blue-200 !border-blue-400 !text-blue-900' : '',
                             ].filter(Boolean).join(' '),
                           ].join(' ')}
-                          onClick={() => slot.openings > 0 && setSelectedTime(slot.time)}
+                          onClick={() => slot.openings > 0 && setSelectedTime(dayjs(slot.time))}
                         >
                           <div className="flex-1">
-                            <div className="font-bold">{new Date(slot.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+                            <div className="font-bold">{dayjs(slot.time).tz().format('h:mm A')}</div>
                             <div className="text-xs text-blue-900">{slot.openings} opening{slot.openings !== 1 ? 's' : ''}</div>
                           </div>
                         </div>
@@ -330,10 +331,10 @@ export default function AppointmentSystem() {
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                       <span className="text-sm font-semibold text-blue-900">
-                        {new Date(selectedTime).toLocaleDateString('en-US')}
+                        {dayjs(selectedTime).tz().format('MM/DD/YYYY')}
                       </span>
                       <span className="text-xs text-blue-900 mt-0.5">
-                        {new Date(selectedTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                        {dayjs(selectedTime).tz().format('h:mm A')}
                       </span>
                     </div>
                     <div>
