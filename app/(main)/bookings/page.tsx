@@ -3,9 +3,11 @@ import LoadingIndicator from "@/components/ui/LoadingIndicator";
 import { useEffect, useState, useCallback } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useRouter } from "next/navigation";
-import { Calendar, Clock, X } from 'lucide-react';
+import { Calendar, Clock, X, ArrowLeft } from 'lucide-react';
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { dayjs } from "@/lib/utils";
+import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 
 interface Booking {
   id: string;
@@ -139,60 +141,104 @@ export default function BookingsPage() {
 
 
   return (
-    <div className="max-w-6xl mx-auto p-4 font-sans w-full">
-      <h1 className="text-2xl font-bold mb-4 text-blue-900 flex items-center gap-2"><Calendar size={24} /> My Bookings</h1>
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => {
-            if (filter !== 'future') {
-              setBookings([]);
-              setHasMore(true);
-              setFilter('future');
-            }
-          }}
-          className={`px-4 py-2 rounded-lg font-semibold transition ${filter === 'future' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-        >
-          Future Bookings
-        </button>
-        <button
-          onClick={() => {
-            if (filter !== 'past') {
-              setBookings([]);
-              setHasMore(true);
-              setFilter('past');
-            }
-          }}
-          className={`px-4 py-2 rounded-lg font-semibold transition ${filter === 'past' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-        >
-          Past Bookings
-        </button>
-      </div>
-      <InfiniteScroll
-        dataLength={bookings.length}
-        next={fetchMoreBookings}
-        hasMore={hasMore}
-        loader={
-          <div className="flex justify-center py-4">
-            <LoadingIndicator />
-            <span className="ml-2 text-blue-900">{bookings.length === 0 ? 'Loading...' : 'Loading more...'}</span>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-2xl mx-auto py-8 px-4">
+        {/* Header */}
+        <div className="mb-8">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4"
+          >
+            <ArrowLeft size={16} />
+            Back to Appointments
+          </Link>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <Calendar size={32} className="text-blue-600" />
+            My Bookings
+          </h1>
+          <p className="text-gray-600 mt-2">View and manage your appointment bookings</p>
+        </div>
+
+        {/* Bookings Content */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => {
+                if (filter !== 'future') {
+                  setBookings([]);
+                  setHasMore(true);
+                  setFilter('future');
+                }
+              }}
+              className={`px-4 py-2 rounded-lg font-semibold transition ${filter === 'future' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+            >
+              Future Bookings
+            </button>
+            <button
+              onClick={() => {
+                if (filter !== 'past') {
+                  setBookings([]);
+                  setHasMore(true);
+                  setFilter('past');
+                }
+              }}
+              className={`px-4 py-2 rounded-lg font-semibold transition ${filter === 'past' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+            >
+              Past Bookings
+            </button>
           </div>
-        }
-        endMessage={null}
-        scrollThreshold={0.95}
-      >
-        <ul className="space-y-3 px-2 pb-4">
-          {bookings.map((booking) => (
-            <BookingItem
-              key={booking.id}
-              booking={booking}
-              filter={filter}
-              onCancelled={(id) => setBookings((prev) => prev.map(b => b.id === id ? { ...b, status: 'CANCELLED' } : b))}
-            />
-          ))}
-        </ul>
-      </InfiniteScroll>
+
+          <InfiniteScroll
+            dataLength={bookings.length}
+            next={fetchMoreBookings}
+            hasMore={hasMore}
+            loader={
+              <div className="flex justify-center py-4">
+                <LoadingIndicator />
+                <span className="ml-2 text-blue-900">{bookings.length === 0 ? 'Loading...' : 'Loading more...'}</span>
+              </div>
+            }
+            endMessage={null}
+            scrollThreshold={0.95}
+          >
+            <ul className="space-y-3">
+              {bookings.map((booking) => (
+                <BookingItem
+                  key={booking.id}
+                  booking={booking}
+                  filter={filter}
+                  onCancelled={(id) => setBookings((prev) => prev.map(b => b.id === id ? { ...b, status: 'CANCELLED' } : b))}
+                />
+              ))}
+            </ul>
+          </InfiniteScroll>
+
+          {!loading && bookings.length === 0 && (
+            <div className="text-center py-12">
+              <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {filter === 'future' ? 'No upcoming bookings' : 'No past bookings'}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {filter === 'future'
+                  ? 'You don\'t have any upcoming appointments scheduled.'
+                  : 'You don\'t have any past appointments.'
+                }
+              </p>
+              {filter === 'future' && (
+                <Link href="/">
+                  <Button className="inline-flex items-center gap-2">
+                    <Calendar size={16} />
+                    Book an Appointment
+                  </Button>
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
