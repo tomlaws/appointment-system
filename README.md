@@ -46,7 +46,6 @@ A modern, full-stack appointment booking system built with Next.js, TypeScript, 
 - **Prisma** ORM with PostgreSQL
 - **Better Auth** for authentication
 - **Zod** for validation
-- **JWT** for secure tokens
 
 ### Database Models
 - **User**: Authentication and user management
@@ -85,7 +84,6 @@ A modern, full-stack appointment booking system built with Next.js, TypeScript, 
    BETTER_AUTH_SECRET="your-secure-random-secret"
    BETTER_AUTH_URL="http://localhost:3000"
    RESEND_API_KEY="your-resend-api-key"
-   JWT_SECRET="your-jwt-secret"
    ROOT_ACCOUNT="admin@example.com"
    ROOT_PASSWORD="secure-admin-password"
    TZ="UTC"
@@ -156,6 +154,7 @@ npm run lint           # Run ESLint
 The application supports configurable timezones:
 - Set `NEXT_PUBLIC_TZ` for client-side timezone
 - Should be set to the same IANA timezone identifier (e.g., "America/New_York", "Asia/Hong_Kong")
+- Keep `TZ="UTC"` to avoid timezone conversion issues
 
 ### Office Hours
 Configure business hours in the `OFFICE_HOURS` environment variable:
@@ -191,17 +190,16 @@ appointment-system/
 ## 🔐 Authentication
 
 The application uses Better Auth for secure authentication with:
-- Email/password authentication
+- Email/OTP authentication
+- Email/password authentication (Admin dashboard)
 - Session management
 - Admin role support
-- JWT tokens for API authentication
 
 ## 📧 Email Notifications
 
 Integrated with Resend for email notifications:
-- Booking confirmations
-- Cancellation notifications
-- Admin alerts
+- Booking confirmations (WIP)
+- Cancellation notifications (WIP)
 
 ## 🎨 UI Components
 
