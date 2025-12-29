@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth-client";
@@ -7,7 +7,7 @@ import { User, Save, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import LoadingIndicator from "@/components/ui/LoadingIndicator";
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
@@ -207,5 +207,22 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <LoadingIndicator size="md" colorClass="border-blue-600" />
+          </div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    }>
+      <ProfilePageContent />
+    </Suspense>
   );
 }
