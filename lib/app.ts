@@ -31,29 +31,36 @@ export async function getCalendar(year: number, month: number): Promise<Calendar
     const daysInMonth = new Date(firstDayOfMonth.getFullYear(), firstDayOfMonth.getMonth() + 1, 0).getDate();
     const calendarDays: Calendar['days'] = [];
     for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(firstDayOfMonth.getFullYear(), firstDayOfMonth.getMonth(), day);
         const slotsForDay = timeSlots.filter(slot =>
             slot.time.getFullYear() === firstDayOfMonth.getFullYear() &&
             slot.time.getMonth() === firstDayOfMonth.getMonth() &&
             slot.time.getDate() === day
         );
-        const past = date < new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+        // dayjs with year, month, day
+        const date = dayjs.tz().year(firstDayOfMonth.getFullYear()).month(firstDayOfMonth.getMonth()).date(day).hour(0).minute(0).second(0).millisecond(0);
+        const past = date.endOf('day') < dayjs().tz();
         // Determine if the day is full by checking if it contains all possible slots, and each slot openings <= 0
         let full = true;
+        let countedSlots = 0;
         for (const { hour, minute } of slotTimes) {
             // Create the full date/time for this slot
-            const slotDateTime = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute, 0, 0);
+            // const slotDateTime = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute, 0, 0);
+            const slotDateTime = date.hour(hour).minute(minute).second(0).millisecond(0);
             // Skip past slots
-            if (slotDateTime < new Date()) {
+            if (slotDateTime < dayjs().tz()) {
                 continue;
             }
+            countedSlots++;
             const slot = slotsForDay.find(s => s.time.getHours() === hour && s.time.getMinutes() === minute);
             if (!slot || slot.openings > 0) {
                 full = false;
                 break;
             }
         }
-        calendarDays.push({ date, full, past });
+        if (countedSlots === 0) {
+            full = false;
+        }
+        calendarDays.push({ date: date.toDate(), full, past });
     }
 
     return { days: calendarDays };
@@ -84,13 +91,16 @@ export async function getTimeSlotsForDate(year: number, month: number, day: numb
         for (let time = new Date(startTime); time < endTime; time = new Date(time.getTime() + slotDuration)) {
             const dbSlot = dbTimeSlots.find(s => s.time.getHours() === time.getHours() && s.time.getMinutes() === time.getMinutes());
             if (dbSlot) {
-                timeSlots.push(dbSlot);
+                timeSlots.push({
+                    ...dbSlot,
+                    past: dayjs(dbSlot.time).tz() < dayjs().tz()
+                });
             } else {
                 const past = time < new Date();
                 timeSlots.push({
                     id: null,
                     time,
-                    past,
+                    past: dayjs(time).tz() < dayjs().tz(),
                     openings: Config.timeslotCapacity
                 });
             }

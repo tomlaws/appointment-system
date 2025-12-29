@@ -300,26 +300,31 @@ export default function AppointmentSystem() {
                       </span>
                     </div>
                   ) : (
-                    slots.filter(slot => !slot.past).map((slot, i) => {
+                    slots.map((slot, i) => {
                       const isSelected = selectedTime && dayjs(selectedTime).isSame(slot.time);
+                      const isDisabled = slot.past || slot.openings === 0;
                       return (
                         <div
                           key={i}
                           className={[
-                            'flex items-center p-3 rounded-lg mb-2 cursor-pointer transition-colors',
+                            'flex items-center p-3 rounded-lg mb-2 transition-colors',
                             [
-                              slot.openings > 0
-                                ? 'bg-white border border-gray-300 hover:bg-gray-100 transition-colors'
-                                : 'bg-gray-50 border border-gray-200',
-                              slot.openings === 0 ? 'opacity-60 pointer-events-none' : '',
-                              isSelected ? '!bg-blue-200 !border-blue-400 !text-blue-900' : '',
+                              isDisabled
+                                ? 'bg-gray-50 border border-gray-200 opacity-60 cursor-not-allowed'
+                                : 'bg-white border border-gray-300 hover:bg-gray-100 cursor-pointer',
+                              isSelected ? '!bg-blue-200 !border-blue-400 !text-blue-900 !opacity-100' : '',
                             ].filter(Boolean).join(' '),
                           ].join(' ')}
-                          onClick={() => slot.openings > 0 && setSelectedTime(dayjs(slot.time))}
+                          onClick={() => !isDisabled && setSelectedTime(dayjs(slot.time))}
                         >
                           <div className="flex-1">
                             <div className="font-bold">{dayjs(slot.time).tz().format('h:mm A')}</div>
-                            <div className="text-xs text-blue-900">{slot.openings} opening{slot.openings !== 1 ? 's' : ''}</div>
+                            <div className="text-xs text-blue-900">
+                              {slot.past
+                                ? 'Past time slot'
+                                : `${slot.openings} opening${slot.openings !== 1 ? 's' : ''}`
+                              }
+                            </div>
                           </div>
                         </div>
                       );
