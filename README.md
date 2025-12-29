@@ -2,6 +2,24 @@
 
 A modern, full-stack appointment booking system built with Next.js, TypeScript, and Prisma. Features a clean admin interface for managing time slots and a user-friendly booking experience with timezone support.
 
+## 🌐 Demo
+
+🚀 **[Live Demo](https://appointment-system-smoky-three.vercel.app/)** - Try the appointment booking system in action!
+
+**Demo Features:**
+- Browse available time slots on an interactive calendar
+- Book appointments with real-time availability
+- Admin dashboard for managing bookings and time slots
+- Responsive design that works on all devices
+- Secure authentication system
+
+**Admin Access:**
+- 🔐 **[Admin Login](https://appointment-system-smoky-three.vercel.app/admin/login)**
+- **Email:** `root@example.com`
+- **Password:** `rootpassword123`
+
+*Use these credentials to explore the full admin dashboard functionality, including time slot management and booking oversight.*
+
 ## 🚀 Features
 
 - **Modern Tech Stack**: Next.js 16, TypeScript, Tailwind CSS, Prisma
