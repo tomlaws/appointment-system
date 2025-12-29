@@ -52,6 +52,7 @@ export default function AppointmentSystem() {
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [calendarLoading, setCalendarLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState<'calendar' | 'timeslots'>('calendar');
 
   useEffect(() => {
     // Cancel previous request
@@ -160,7 +161,243 @@ export default function AppointmentSystem() {
   return (
     <VCenter>
       <div className="max-w-[1200px] mx-auto p-2 sm:p-5 overflow-x-hidden font-sans w-full">
-        <div className="flex flex-col md:flex-row gap-5 items-start w-full">
+        {/* Mobile: 2-step layout */}
+        <div className="block md:hidden">
+          {currentStep === 'calendar' ? (
+            <div className="w-full">
+              <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-2 sm:p-6 w-full flex flex-col h-[540px]">
+                <div className="flex items-center justify-between h-[48px] mb-4">
+                  <div className="w-12 flex justify-start items-center h-full">
+                    <button
+                      aria-label="Previous month"
+                      disabled={calendarLoading || (month === today.month() + 1 && year === today.year())}
+                      onClick={() => {
+                        let newMonth, newYear;
+                        if (month === 1) {
+                          newMonth = 12;
+                          newYear = year - 1;
+                        } else {
+                          newMonth = month - 1;
+                          newYear = year;
+                        }
+                        setMonth(newMonth);
+                        setYear(newYear);
+                        if (newMonth === today.month() + 1 && newYear === today.year()) {
+                          setSelectedDay(today.date());
+                        } else {
+                          setSelectedDay(1);
+                        }
+                      }}
+                      className={`border border-blue-100 bg-white p-2 rounded-lg transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 ${month === today.month() + 1 && year === today.year() ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    ><ChevronLeft size={16} /></button>
+                  </div>
+                  <div className="flex-1 flex items-center justify-center h-full">
+                    <span className="text-center font-bold text-blue-900 text-base">
+                      {dayjs().tz().month(month - 1).format('MMMM')} {year}
+                    </span>
+                  </div>
+                  <div className="w-12 flex justify-end items-center h-full">
+                    <button
+                      aria-label="Next month"
+                      disabled={calendarLoading}
+                      onClick={() => {
+                        let newMonth, newYear;
+                        if (month === 12) {
+                          newMonth = 1;
+                          newYear = year + 1;
+                        } else {
+                          newMonth = month + 1;
+                          newYear = year;
+                        }
+                        setMonth(newMonth);
+                        setYear(newYear);
+                        if (newMonth === today.month() + 1 && newYear === today.year()) {
+                          setSelectedDay(today.date());
+                        } else {
+                          setSelectedDay(1);
+                        }
+                      }}
+                      className="border border-blue-100 bg-white p-2 rounded-lg cursor-pointer transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
+                    ><ChevronRight size={16} /></button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-7 gap-2 text-blue-900 font-bold text-xs text-center">
+                  <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+                <div className="flex flex-col gap-2 mt-3 flex-1 min-h-[288px]">
+                  {calendarLoading || !calendar ? (
+                    <div key="loading" className="flex-1 flex flex-col justify-center items-center">
+                      <div className="flex items-center gap-2">
+                        <LoadingIndicator />
+                        <span>Loading calendar...</span>
+                      </div>
+                    </div>
+                  ) : getCalendarMatrix().map((week, wIdx) => (
+                    <div key={wIdx} className="flex flex-1 gap-2">
+                      {week.map((d, idx) => {
+                        if (!d) return <div key={idx} className="flex-1" />;
+                        const dayDate = dayjs(d.date).tz();
+                        const dayNum = dayDate.date();
+                        const isSelected = selectedDay === dayNum;
+                        const isFull = Boolean(d.full);
+                        const isPast = Boolean(d.past);
+                        const disabled = isPast;
+                        return (
+                          <div key={idx} className="flex-1 flex items-stretch">
+                            <button
+                              type="button"
+                              className={[
+                                'w-full h-full p-3 rounded-lg cursor-pointer border box-border transition-colors flex flex-col items-center justify-center relative',
+                                isFull && !isPast ? 'bg-gray-100 text-gray-500 border-gray-300' : 'bg-white border-blue-100',
+                                isSelected ? '!bg-blue-200 !border-blue-400 !text-blue-900' : '',
+                                isPast ? 'opacity-50 pointer-events-none cursor-not-allowed' : '',
+                              ].join(' ')}
+                              onClick={() => {
+                                if (!disabled) {
+                                  setSelectedDay(dayNum);
+                                  setSelectedTime(null);
+                                  setBookingResult(null);
+                                  setBookingError(null);
+                                  setCurrentStep('timeslots');
+                                }
+                              }}
+                              tabIndex={disabled ? -1 : 0}
+                              disabled={disabled}
+                            >
+                              <span className={["font-bold text-sm z-10", isSelected && isFull && !isPast ? "text-blue-900" : ""].join(" ")}>{dayNum}</span>
+                              {isFull && !isPast && (
+                                <span className={[
+                                  "mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold pointer-events-none select-none border",
+                                  isSelected && isFull && !isPast
+                                    ? "bg-blue-100 text-blue-700 border-blue-300"
+                                    : "bg-gray-200 text-gray-600 border-gray-200"
+                                ].join(" ")} style={{ lineHeight: 1 }}>Full</span>
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full">
+              <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-2 sm:p-6 w-full flex flex-col h-[540px]">
+                <div className="flex items-center justify-between h-[48px] mb-4">
+                  <div className="w-12 flex justify-start items-center h-full">
+                    <button
+                      aria-label="Back to calendar"
+                      onClick={() => setCurrentStep('calendar')}
+                      className="border border-blue-100 bg-white p-2 rounded-lg cursor-pointer transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
+                    ><ChevronLeft size={16} /></button>
+                  </div>
+                  <div className="flex-1 flex items-center justify-center h-full">
+                    <span className="text-center font-bold text-blue-900 text-base">
+                      {selectedDay !== null
+                        ? `Timeslots - ${dayjs().tz().year(year).month(month - 1).date(selectedDay).format('MMM D')}`
+                        : 'Timeslots'}
+                    </span>
+                  </div>
+                  <div className="w-12"></div>
+                </div>
+                <div className="relative flex-1 min-h-0 overflow-y-auto">
+                  {slotsLoading ? (
+                    <div className="absolute inset-0 flex justify-center items-center z-10">
+                      <span className="flex items-center gap-2"><LoadingIndicator /><span>Loading time slots...</span></span>
+                    </div>
+                  ) : slots.length === 0 ? (
+                    <div className="absolute inset-0 flex justify-center items-center z-10">
+                      <span className="flex items-center gap-2">
+                        <div className="text-blue-900">No slots available</div>
+                      </span>
+                    </div>
+                  ) : (
+                    slots.map((slot, i) => {
+                      const isSelected = selectedTime && dayjs(selectedTime).isSame(slot.time);
+                      const isDisabled = slot.past || slot.openings === 0;
+                      return (
+                        <div
+                          key={i}
+                          className={[
+                            'flex items-center p-3 rounded-lg mb-2 transition-colors',
+                            [
+                              isDisabled
+                                ? 'bg-gray-50 border border-gray-200 opacity-60 cursor-not-allowed'
+                                : 'bg-white border border-gray-300 hover:bg-gray-100 cursor-pointer',
+                              isSelected ? '!bg-blue-200 !border-blue-400 !text-blue-900 !opacity-100' : '',
+                            ].filter(Boolean).join(' '),
+                          ].join(' ')}
+                          onClick={() => !isDisabled && setSelectedTime(dayjs(slot.time))}
+                        >
+                          <div className="flex-1">
+                            <div className="font-bold">{dayjs(slot.time).tz().format('h:mm A')}</div>
+                            <div className="text-xs text-blue-900">
+                              {slot.past
+                                ? 'Past time slot'
+                                : `${slot.openings} opening${slot.openings !== 1 ? 's' : ''}`
+                              }
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                {selectedTime && (
+                  <div className="mt-4 p-3 bg-white border-2 border-blue-300 rounded-xl flex items-center gap-2 shadow-sm">
+                    <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full">
+                      <Check className="w-7 h-7 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <span className="text-sm font-semibold text-blue-900">
+                        {dayjs(selectedTime).tz().format('MM/DD/YYYY')}
+                      </span>
+                      <span className="text-xs text-blue-900 mt-0.5">
+                        {dayjs(selectedTime).tz().format('h:mm A')}
+                      </span>
+                    </div>
+                    <div>
+                      <Button onClick={handleBook} disabled={bookingLoading}>
+                        {bookingLoading && (
+                          <span className="pr-2"><LoadingIndicator size="sm" /></span>
+                        )}
+                        <span>Book</span>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {bookingResult && !bookingError && (
+                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex flex-col items-center animate-fade-in">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Check className="w-7 h-7 text-green-500 animate-bounce-in" />
+                      <span className="text-md font-bold text-green-700">Booking Confirmed!</span>
+                    </div>
+                    <div className="text-green-900 text-sm text-center">
+                      Your appointment is booked for <br />
+                      <span className="font-semibold">{bookingResult.time ? new Date(bookingResult.time).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : ''}</span>
+                    </div>
+                  </div>
+                )}
+                {bookingError && (
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex flex-col items-center animate-fade-in">
+                    <div className="flex items-center gap-2 mb-2">
+                      <X className="w-7 h-7 text-red-500 animate-bounce-in" />
+                      <span className="text-md font-bold text-red-700">Booking Failed</span>
+                    </div>
+                    <div className="text-red-900 text-sm text-center">
+                      {bookingError}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop: side-by-side layout */}
+        <div className="hidden md:flex flex-row gap-5 items-start w-full">
           <div className="flex-1 w-full">
             <div className="bg-white border border-blue-100 rounded-2xl shadow-sm p-2 sm:p-6 w-full flex flex-col h-[540px]">
               <div className="flex items-center justify-between h-[48px] mb-4">
@@ -385,3 +622,4 @@ export default function AppointmentSystem() {
     </VCenter>
   );
 }
+
