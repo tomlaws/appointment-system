@@ -98,8 +98,15 @@ export default function LoginPage() {
         return;
       }
 
-      // Only redirect on successful authentication
-      router.replace("/");
+      // Check if this is a first-time user (no name set)
+      const isFirstTimeUser = !data?.user?.name || data.user.name.trim() === '';
+
+      // Redirect based on user status
+      if (isFirstTimeUser) {
+        router.replace("/profile?onboarding=true");
+      } else {
+        router.replace("/");
+      }
     } catch (err: any) {
       setOtp(["", "", "", "", "", ""]);
       setError(`${err.message || "Invalid OTP"}.`);
