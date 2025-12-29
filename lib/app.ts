@@ -1,6 +1,7 @@
 import { Config } from "./config";
 import { AppErrors } from "./error";
 import prisma from "./prisma";
+import { sendEmail } from "./resend";
 import type { Calendar } from "./types";
 import { dayjs } from "./utils";
 
@@ -96,7 +97,6 @@ export async function getTimeSlotsForDate(year: number, month: number, day: numb
                     past: dayjs(dbSlot.time).tz() < dayjs().tz()
                 });
             } else {
-                const past = time < new Date();
                 timeSlots.push({
                     id: null,
                     time,
@@ -135,7 +135,7 @@ export async function createBooking(userId: string, time: Date) {
     if (!isValidTime) {
         throw new AppErrors.InvalidTimeSlotError();
     }
-    return prisma.$transaction(async (tx) => {
+    const booking = prisma.$transaction(async (tx) => {
         // Optimistic locking: check for existing confirmed booking for this user and time
         const existing = await tx.booking.findFirst({
             where: {
@@ -212,11 +212,23 @@ export async function createBooking(userId: string, time: Date) {
             return booking;
         }
     });
+    // send email
+    (async () => {
+        const userEmail = (await prisma.user.findUnique({ where: { id: userId } }))?.email;
+        if (userEmail) {
+            sendEmail({
+                to: userEmail,
+                subject: 'Booking Confirmation',
+                html: `Your booking for ${dayjs(time).tz().format('MMM D, YYYY, h:mm A')} has been confirmed.`
+            });
+        }
+    })();
+    return booking;
 }
 
 export async function getBookings(userId: string, after: string | undefined, limit: number, past: boolean = false) {
     const bookings = await prisma.booking.findMany({
-        where: { 
+        where: {
             userId,
             time: past ? { lt: new Date() } : { gte: new Date() }
         },
@@ -233,7 +245,7 @@ export async function getBookings(userId: string, after: string | undefined, lim
 }
 
 export async function cancelBooking(userId: string, bookingId: string) {
-    return prisma.$transaction(async (tx) => {
+    const booking = await prisma.$transaction(async (tx) => {
         const bookings = await tx.booking.updateManyAndReturn({
             where: {
                 id: bookingId,
@@ -257,5 +269,17 @@ export async function cancelBooking(userId: string, bookingId: string) {
                 }
             });
         }
+        return booking;
     });
+    // send email
+    (async () => {
+        const userEmail = (await prisma.user.findUnique({ where: { id: userId } }))?.email;
+        if (userEmail) {
+            sendEmail({
+                to: userEmail,
+                subject: 'Booking Cancelled',
+                html: `Your booking for ${dayjs(booking.time).tz().format('MMM D, YYYY, h:mm A')} has been cancelled.`
+            });
+        }
+    })();
 }

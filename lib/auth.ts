@@ -26,13 +26,25 @@ export const auth = betterAuth({
                 console.log(`Sending ${type} OTP to ${email}: ${otp}`);
                 if (type === "sign-in") {
                     // Send the OTP for sign in
-                    await sendEmail(email, 'Your Sign-In Code', `Your sign-in code is: ${otp}`);
+                    await sendEmail({
+                        to: email,
+                        subject: 'Your Sign-In Code',
+                        html: `Your sign-in code is: ${otp}`
+                    });
                 } else if (type === "email-verification") {
                     // Send the OTP for email verification
-                    await sendEmail(email, 'Your Email Verification Code', `Your email verification code is: ${otp}`);
+                    await sendEmail({
+                        to: email,
+                        subject: 'Your Email Verification Code',
+                        html: `Your email verification code is: ${otp}`
+                    });
                 } else {
                     // Send the OTP for password reset
-                    await sendEmail(email, 'Your Password Reset Code', `Your password reset code is: ${otp}`);
+                    await sendEmail({
+                        to: email,
+                        subject: 'Your Password Reset Code',
+                        html: `Your password reset code is: ${otp}`
+                    });
                 }
             },
         })
