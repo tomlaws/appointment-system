@@ -213,16 +213,18 @@ export async function createBooking(userId: string, time: Date) {
         }
     });
     // send email
-    (async () => {
+    try {
         const userEmail = (await prisma.user.findUnique({ where: { id: userId } }))?.email;
         if (userEmail) {
-            sendEmail({
+            await sendEmail({
                 to: userEmail,
                 subject: 'Booking Confirmation',
                 html: `Your booking for ${dayjs(time).tz().format('MMM D, YYYY, h:mm A')} has been confirmed.`
             });
         }
-    })();
+    } catch (e) {
+        console.error('Failed to send booking confirmation email:', e);
+    }
     return booking;
 }
 
@@ -272,14 +274,16 @@ export async function cancelBooking(userId: string, bookingId: string) {
         return booking;
     });
     // send email
-    (async () => {
+    try {
         const userEmail = (await prisma.user.findUnique({ where: { id: userId } }))?.email;
         if (userEmail) {
-            sendEmail({
+            await sendEmail({
                 to: userEmail,
                 subject: 'Booking Cancelled',
                 html: `Your booking for ${dayjs(booking.time).tz().format('MMM D, YYYY, h:mm A')} has been cancelled.`
             });
         }
-    })();
+    } catch (e) {
+        console.error('Failed to send booking cancellation email:', e);
+    }
 }
