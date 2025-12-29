@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { UserWithRole } from "better-auth/plugins";
 
@@ -94,7 +94,7 @@ export default function AdminUsersPage() {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4 text-blue-900">Users</h2>
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center gap-2">
         <select
           value={searchField}
           onChange={e => updateFilters('', e.target.value as "name" | "email")}
@@ -108,13 +108,14 @@ export default function AdminUsersPage() {
           placeholder={`Search by ${searchField}...`}
           value={search}
           onChange={e => updateFilters(e.target.value, undefined)}
-          className="border border-blue-200 rounded-lg px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          className="border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 sm:flex-1"
         />
         <button
           onClick={() => updateFilters('', 'name')}
-          className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+          className="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center min-w-[44px] h-10 self-start sm:self-auto"
+          title="Clear Filters"
         >
-          Clear Filters
+          <RotateCcw size={16} />
         </button>
       </div>
       <div className="bg-white border border-blue-100 rounded-2xl shadow-sm overflow-x-auto">
