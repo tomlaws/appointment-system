@@ -74,23 +74,21 @@ A modern, full-stack appointment booking system built with Next.js, TypeScript, 
    ```
 
 3. **Environment Setup**
-   Copy the `.env` file and configure your environment variables:
+   Copy the example environment file and configure your environment variables:
    ```bash
-   cp .env .env.local
+   cp .env.example .env.local
    ```
 
-   Required environment variables:
+   Then edit `.env.local` and fill in your actual values for the required environment variables:
    ```env
    DATABASE_URL="your-postgresql-connection-string"
-   BETTER_AUTH_SECRET="your-secret-key"
+   BETTER_AUTH_SECRET="your-secure-random-secret"
    BETTER_AUTH_URL="http://localhost:3000"
    RESEND_API_KEY="your-resend-api-key"
    JWT_SECRET="your-jwt-secret"
    ROOT_ACCOUNT="admin@example.com"
-   ROOT_PASSWORD="secure-password"
-   TIMESLOT_DURATION_MINUTES=30
-   TIMESLOT_CAPACITY=5
-   TZ=UTC
+   ROOT_PASSWORD="secure-admin-password"
+   TZ="UTC"
    NEXT_PUBLIC_TZ="Your/Timezone"
    OFFICE_HOURS="09:00-12:30,14:00-18:00"
    ```
