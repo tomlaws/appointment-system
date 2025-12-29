@@ -12,6 +12,11 @@ export async function sendEmail({to, subject, html}: {to: string, subject: strin
         console.log('HTML:', html);
         return;
     }
+    // don't send email to root admin email
+    if (to === process.env.ROOT_ACCOUNT) {
+        console.log('Email to root admin not sent.');
+        return;
+    }
     const { data, error } = await resend.emails.send({
         from: 'Booking System <no-reply@tomlaw.dev>',
         to: [to],
