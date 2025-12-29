@@ -30,14 +30,14 @@ export default function Navbar() {
         };
     }, []); 
   return (
-    <nav className="w-full border-b border-blue-50 bg-white/50 backdrop-blur-sm">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <nav className="w-full h-[60px] border-b border-blue-50 bg-white/50 backdrop-blur-sm flex items-center">
+      <div className="max-w-6xl mx-auto px-4 w-full flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/" className="text-blue-700 font-bold">Appointment System</Link>
         </div>
         <div className="flex items-center gap-3">
           {!isPending && !session?.user && (
-            <Link href="/login" className="text-blue-600 hover:underline">
+            <Link href="/login" className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors p-2 rounded-lg hover:bg-blue-50">
               Login
             </Link>
           )}
@@ -77,7 +77,7 @@ export default function Navbar() {
                       authClient.signOut();
                       setIsDropdownOpen(false);
                     }}
-                    className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 hover:text-blue-800 transition-colors"
+                    className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 hover:text-blue-800 transition-colors cursor-pointer"
                   >
                     Logout
                   </button>

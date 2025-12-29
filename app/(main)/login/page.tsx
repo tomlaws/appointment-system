@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth-client";
+import LoadingIndicator from "@/components/ui/LoadingIndicator";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -12,15 +13,24 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const router = useRouter();
 
+  // Auto-submit when OTP is complete
+  useEffect(() => {
+    const otpString = otp.join("");
+    if (otpString.length === 6 && !loading) {
+      handleVerifyOtp();
+    }
+  }, [otp, loading]);
+
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) return; // Only allow single digits
-    
+
+    const filteredValue = value.replace(/\D/g, ""); // Only allow digits
     const newOtp = [...otp];
-    newOtp[index] = value.replace(/\D/g, ""); // Only allow digits
+    newOtp[index] = filteredValue;
     setOtp(newOtp);
-    
-    // Auto-focus next input
-    if (value && index < 5) {
+
+    // Auto-focus next input only if we actually added a digit
+    if (filteredValue && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
       nextInput?.focus();
     }
@@ -50,10 +60,15 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      await authClient.emailOtp.sendVerificationOtp({
+      const { data, error } = await authClient.emailOtp.sendVerificationOtp({
         email,
         type: "sign-in",
       });
+      if (error) {
+        setError(error.message || "Failed to send OTP");
+        setLoading(false);
+        return;
+      }
       setStep("otp");
     } catch (err: any) {
       setError(err.message || "Failed to send OTP");
@@ -62,24 +77,36 @@ export default function LoginPage() {
     }
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerifyOtp = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     const otpString = otp.join("");
     if (otpString.length !== 6) return;
-    
+
     setLoading(true);
     setError("");
     try {
-      await authClient.signIn.emailOtp({
+      const { data, error } = await authClient.signIn.emailOtp({
         email,
         otp: otpString,
       });
+
+      if (error) {
+        // Handle authentication error from the response
+        setOtp(["", "", "", "", "", ""]);
+        setError(`${error.message || "Invalid OTP"}.`);
+        setLoading(false);
+        return;
+      }
+
+      // Only redirect on successful authentication
       router.replace("/");
     } catch (err: any) {
-      setError(err.message || "Login failed");
-    } finally {
+      setOtp(["", "", "", "", "", ""]);
+      setError(`${err.message || "Invalid OTP"}.`);
       setLoading(false);
+      return;
     }
+    // Only reach here on success
   };
 
   return (
@@ -95,6 +122,7 @@ export default function LoginPage() {
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
+                placeholder="Enter your email address"
                 required
                 autoFocus
               />
@@ -132,10 +160,19 @@ export default function LoginPage() {
                 Enter the 6-digit code sent to {email}
               </p>
             </div>
-            {error && <div className="text-red-500 text-sm">{error}</div>}
-            <Button type="submit" className="w-full" disabled={loading || otp.join("").length !== 6}>
-              {loading ? "Verifying..." : "Continue"}
-            </Button>
+            {loading && (
+              <div className="text-center py-4">
+                <div className="flex justify-center mb-2">
+                  <LoadingIndicator size="md" colorClass="border-blue-600" />
+                </div>
+                <p className="text-sm text-gray-600">Verifying...</p>
+              </div>
+            )}
+            {error && (
+              <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                {error}
+              </div>
+            )}
           </form>
         )}
       </div>
