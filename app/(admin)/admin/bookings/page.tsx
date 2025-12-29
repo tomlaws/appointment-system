@@ -165,7 +165,7 @@ export default function AdminBookingsPage() {
                     {dayjs(booking.time).tz().format('MMM D, YYYY, h:mm A')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-blue-900">
-                    {dayjs(booking.createdAt).tz().format('MMM D, YYYY')}
+                    {dayjs(booking.createdAt).tz().format('MMM D, YYYY, h:mm A')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold uppercase border ${

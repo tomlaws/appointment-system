@@ -31,6 +31,8 @@ export default function AdminTimeSlotDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openings, setOpenings] = useState<number>(0);
+  const [openingsInput, setOpeningsInput] = useState<string>('0');
+  const [openingsError, setOpeningsError] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const time = dayjs.utc(decodeURIComponent(resolvedParams.time));
 
@@ -48,6 +50,7 @@ export default function AdminTimeSlotDetailPage({
       const result: TimeSlotData = await response.json();
       setData(result);
       setOpenings(result.timeslot.openings);
+      setOpeningsInput(result.timeslot.openings.toString());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -142,15 +145,30 @@ export default function AdminTimeSlotDetailPage({
               <input
                 type="number"
                 min="0"
-                value={openings}
-                onChange={(e) => setOpenings(parseInt(e.target.value) || 0)}
+                value={openingsInput}
+                onChange={(e) => {
+                  setOpeningsInput(e.target.value);
+                  setOpeningsError(''); // Clear error when user starts typing
+                }}
+                onBlur={() => {
+                  const numValue = parseInt(openingsInput);
+                  if (isNaN(numValue) || numValue < 0) {
+                    setOpeningsError('Available openings cannot be negative');
+                  } else {
+                    setOpenings(numValue);
+                    setOpeningsError('');
+                  }
+                }}
                 className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+              {openingsError && (
+                <p className="text-red-600 text-sm mt-1">{openingsError}</p>
+              )}
             </div>
 
             <Button
               onClick={handleSaveOpenings}
-              disabled={saving || openings === timeslot.openings}
+              disabled={saving || parseInt(openingsInput) === timeslot.openings || !!openingsError}
               className="w-full"
             >
               {saving ? (
@@ -171,7 +189,7 @@ export default function AdminTimeSlotDetailPage({
             <div className="flex items-center gap-2 text-blue-900">
               <Users size={16} />
               <span className="font-medium">
-                {bookings.length} / {timeslot.openings + bookings.length} booked
+                {bookings.length} / {timeslot.openings} booked
               </span>
             </div>
             <p className="text-sm text-blue-700 mt-1">
