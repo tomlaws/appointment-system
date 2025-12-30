@@ -10,7 +10,8 @@ import { headers } from "next/headers";
 export const auth = betterAuth({
     trustedOrigins: [
         ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : []),
-        ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : [])
+        ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+        ...(process.env.CUSTOM_DOMAINS ? process.env.CUSTOM_DOMAINS.split(',').map(d => d.trim()) : []),
     ],
     database: prismaAdapter(prisma, {
         provider: 'postgresql',
