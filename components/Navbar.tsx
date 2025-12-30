@@ -4,6 +4,7 @@ import { authClient } from '@/lib/auth-client';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
     const { 
@@ -15,6 +16,7 @@ export default function Navbar() {
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -73,9 +75,10 @@ export default function Navbar() {
                   </Link>
                   <hr className="border-blue-100 my-1" />
                   <button
-                    onClick={() => {
-                      authClient.signOut();
+                    onClick={async () => {
+                      await authClient.signOut();
                       setIsDropdownOpen(false);
+                      router.push("/");
                     }}
                     className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 hover:text-blue-800 transition-colors cursor-pointer"
                   >
