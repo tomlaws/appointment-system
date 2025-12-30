@@ -1,6 +1,6 @@
 # Appointment Booking System
 
-A modern, full-stack appointment booking system built with Next.js, TypeScript, and Prisma. Features a clean admin interface for managing time slots and a user-friendly booking experience with timezone support.
+A modern, full-stack appointment booking system built with Next.js, TypeScript, Prisma and Redis. Features a clean admin interface for managing time slots and a user-friendly booking experience with timezone support.
 
 ## 🌐 Demo
 
@@ -44,6 +44,7 @@ A modern, full-stack appointment booking system built with Next.js, TypeScript, 
 ### Backend
 - **Next.js API Routes** with Hono framework
 - **Prisma** ORM with PostgreSQL
+- **Redis** for caching
 - **Better Auth** for authentication
 - **Zod** for validation
 
@@ -84,6 +85,7 @@ A modern, full-stack appointment booking system built with Next.js, TypeScript, 
    BETTER_AUTH_SECRET="your-secure-random-secret"
    BETTER_AUTH_URL="http://localhost:3000"
    RESEND_API_KEY="your-resend-api-key"
+   REDIS_URL="your-redis-connection-string-here"
    ROOT_ACCOUNT="admin@example.com"
    ROOT_PASSWORD="secure-admin-password"
    TZ="UTC"
