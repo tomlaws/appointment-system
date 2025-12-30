@@ -14,7 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <html lang="en">
       <head>
-        <title>Admin Dashboard - Appointment System</title>
+        <title>Admin Dashboard</title>
       </head>
       <body className="antialiased bg-gray-50 min-h-screen font-sans">
         <AdminDashboardLayout>{children}</AdminDashboardLayout>

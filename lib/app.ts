@@ -1,11 +1,19 @@
 import { Config } from "./config";
 import { AppErrors } from "./error";
 import prisma from "./prisma";
+import { redis } from "./redis";
 import { sendEmail } from "./resend";
 import type { Calendar } from "./types";
 import { dayjs } from "./utils";
 
 export async function getCalendar(year: number, month: number): Promise<Calendar> {
+    // Check cache first
+    const cacheKey = `calendar:${year}-${month}`;
+    const cached = await redis.getJson(cacheKey);
+    if (cached) {
+        console.log("Returning cached calendar");
+        return cached;
+    }
     const firstDayOfMonth = new Date(year, month - 1, 1);
     // Get timeslots from database
     const timeSlots = await prisma.timeSlot.findMany({
@@ -63,11 +71,18 @@ export async function getCalendar(year: number, month: number): Promise<Calendar
         }
         calendarDays.push({ date: date.toDate(), full, past });
     }
-
+    await redis.setJson(`calendar:${year}-${month}`, { days: calendarDays }, 3600);
     return { days: calendarDays };
 }
 
 export async function getTimeSlotsForDate(year: number, month: number, day: number) {
+    // Check cache first
+    const cacheKey = `timeslots:${year}-${month}-${day}`;
+    const cached = await redis.getJson(cacheKey);
+    if (cached) {
+        console.log("Returning cached timeslots");
+        return cached;
+    }
     const dateStart = new Date(year, month - 1, day, 0, 0, 0, 0);
     const dateEnd = new Date(year, month - 1, day + 1, 0, 0, 0, 0);
 
@@ -106,7 +121,7 @@ export async function getTimeSlotsForDate(year: number, month: number, day: numb
             }
         }
     }
-
+    await redis.setJson(`timeslots:${year}-${month}-${day}`, timeSlots, 3600);
     return timeSlots;
 }
 
@@ -212,6 +227,12 @@ export async function createBooking(userId: string, time: Date) {
             return booking;
         }
     });
+    // Invalidate cache for the timeslot date and calendar
+    const year = dayjs(time).get("year");
+    const month = dayjs(time).get("month") + 1;
+    const day = dayjs(time).get("date");
+    await redis.del(`timeslots:${year}-${month}-${day}`);
+    await redis.del(`calendar:${year}-${month}`);
     // send email
     try {
         const userEmail = (await prisma.user.findUnique({ where: { id: userId } }))?.email;
@@ -273,6 +294,12 @@ export async function cancelBooking(userId: string, bookingId: string) {
         }
         return booking;
     });
+    // Invalidate cache for the timeslot date and calendar
+    const year = dayjs(booking.time).get("year");
+    const month = dayjs(booking.time).get("month") + 1;
+    const day = dayjs(booking.time).get("date");
+    await redis.del(`timeslots:${year}-${month}-${day}`);
+    await redis.del(`calendar:${year}-${month}`);
     // send email
     try {
         const userEmail = (await prisma.user.findUnique({ where: { id: userId } }))?.email;

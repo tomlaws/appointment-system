@@ -39,7 +39,7 @@ export default function Navbar() {
         </div>
         <div className="flex items-center gap-3">
           {!isPending && !session?.user && (
-            <Link href="/login" className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors p-2 rounded-lg hover:bg-blue-50">
+            <Link href="/login" className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors px-4 py-2 rounded-lg hover:bg-blue-50">
               Login
             </Link>
           )}

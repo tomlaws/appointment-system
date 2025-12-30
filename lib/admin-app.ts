@@ -2,6 +2,8 @@ import type { Prisma } from "@/generated/prisma/client";
 import prisma from "./prisma";
 import { validateSlotTime } from "./app";
 import { Config } from "./config";
+import { redis } from "./redis";
+import { dayjs } from "./utils";
 
 async function getBookings({
   username,
@@ -102,6 +104,12 @@ async function updateTimeSlotOpenings(time: Date, openings: number) {
     update: { openings },
     create: { time, openings },
   });
+  // Invalidate cache for the month of the time slot
+  const year = dayjs(time).get("year");
+  const month = dayjs(time).get("month") + 1;
+  const day = dayjs(time).get("date");
+  await redis.del(`timeslots:${year}-${month}-${day}`);
+  await redis.del(`calendar:${year}-${month}`);
 
   return updatedTimeSlot;
 }
