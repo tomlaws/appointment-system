@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/Button';
 import LoadingIndicator from '../../components/ui/LoadingIndicator';
 import type { TimeSlot } from '../../generated/prisma/browser';
 import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
-import { VCenter } from '@/components/ui/VCenter';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import type { Dayjs } from 'dayjs';
@@ -159,7 +158,7 @@ export default function AppointmentSystem() {
   }
 
   return (
-    <VCenter>
+    <div className="flex-1 min-h-0 flex items-center justify-center">
       <div className="max-w-[1200px] mx-auto p-2 sm:p-5 overflow-x-hidden font-sans w-full">
         {/* Mobile: 2-step layout */}
         <div className="block md:hidden">
@@ -619,7 +618,7 @@ export default function AppointmentSystem() {
           </div>
         </div>
       </div>
-    </VCenter>
+    </div>
   );
 }
 
